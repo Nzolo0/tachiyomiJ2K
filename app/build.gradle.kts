@@ -43,7 +43,7 @@ android {
         buildConfigField("String", "BETA_COUNT", "\"${getBetaCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")
         buildConfigField("String", "BUILD_TIME", "\"${getBuildTime()}\"")
-        buildConfigField("Boolean", "INCLUDE_UPDATER", "false")
+        buildConfigField("Boolean", "INCLUDE_UPDATER", "true")
         buildConfigField("boolean", "BETA", "false")
 
         ndk {

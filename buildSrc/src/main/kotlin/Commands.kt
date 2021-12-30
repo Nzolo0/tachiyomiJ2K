@@ -24,7 +24,7 @@ fun Project.getBetaCount(): String {
 
 
 fun Project.getGitSha(): String {
-    return runCommand("git rev-parse --short HEAD")
+    return runCommand("git rev-parse --short master")
     // return "1"
 }
 
