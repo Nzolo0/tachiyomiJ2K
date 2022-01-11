@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.konan.properties.loadProperties
 import java.io.ByteArrayOutputStream
 
 plugins {
@@ -24,9 +25,19 @@ fun runCommand(command: String): String {
     return String(byteOut.toByteArray()).trim()
 }
 
+val keyStoreProperties = loadProperties("keystore.properties")
+
 val supportedAbis = setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
 
 android {
+    signingConfigs {
+        create("release") {
+            storeFile = file(keyStoreProperties.getProperty("STORE_FILE"))
+            storePassword = keyStoreProperties.getProperty("STORE_PASSWORD")
+            keyAlias = keyStoreProperties.getProperty("KEY_ALIAS")
+            keyPassword = keyStoreProperties.getProperty("STORE_PASSWORD")
+        }
+    }
     compileSdk = AndroidVersions.compileSdk
     ndkVersion = AndroidVersions.ndk
 
@@ -75,6 +86,7 @@ android {
             isShrinkResources = true
             isMinifyEnabled = true
             proguardFiles("proguard-android-optimize.txt", "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
         create("beta") {
             initWith(getByName("release"))

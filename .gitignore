@@ -7,3 +7,6 @@
 *iml
 *.iml
 */build
+
+/keystore.properties
+keyStore_tachiyomij2k.jks
