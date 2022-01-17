@@ -79,7 +79,7 @@
     <color name="primaryInverseTako">#a85d14</color>
     <color name="onPrimaryTako">#3C2004</color>
     <color name="secondaryTako">#F3B375</color>
-    <color name="onSecondaryTako">#242431</color>
+    <color name="onSecondaryTako">#574360</color>
     <color name="secondaryVariantTako">#f4d1af</color>
     <color name="tabBarIconColorTako">@color/secondaryTako</color>
     <color name="rippleColorTako">#1FF3B375</color>

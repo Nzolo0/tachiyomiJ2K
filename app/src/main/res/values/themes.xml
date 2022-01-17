@@ -179,8 +179,8 @@
         <item name="colorOnSecondary">@color/onSecondaryTako</item>
         <item name="colorSecondaryVariant">@color/secondaryVariantTako</item>
         <item name="colorPrimaryVariant">@color/primaryVariantTako</item>
-        <item name="colorTertiary">@color/downloadBadgeDayNight</item>
-        <item name="colorOnTertiary">@color/colorOnDownloadBadgeDayNight</item>
+        <item name="colorTertiary">@color/onSecondaryTako</item>
+        <item name="colorOnTertiary">@color/secondaryVariantTako</item>
         <item name="tabBarIconColor">@color/tabBarIconColorTako</item>
         <item name="colorControlHighlight">@color/rippleColorTako</item>
         <item name="colorSurface">@color/backgroundTako</item>
