@@ -27,6 +27,7 @@ import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.model.SChapter
+import eu.kanade.tachiyomi.source.model.SManga.Companion.setTitleNormalized
 import eu.kanade.tachiyomi.ui.base.controller.BaseController
 import eu.kanade.tachiyomi.ui.base.controller.FadeChangeHandler
 import eu.kanade.tachiyomi.ui.main.BottomNavBarInterface
@@ -148,6 +149,10 @@ class MigrationListController(bundle: Bundle? = null) :
                 if (mangaObj == null) {
                     manga.searchResult.initialize(null)
                     continue
+                }
+                if (mangaObj.title.contains("’")) {
+                    mangaObj.setTitleNormalized()
+                    db.insertManga(mangaObj).executeAsBlocking()
                 }
 
                 val mangaSource = manga.mangaSource()
