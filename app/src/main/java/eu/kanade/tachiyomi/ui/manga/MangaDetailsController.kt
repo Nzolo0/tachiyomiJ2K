@@ -987,6 +987,8 @@ class MangaDetailsController :
         val lastRead = chapter.last_page_read
         val pagesLeft = chapter.pages_left
         val read = item.chapter.read
+        val oldLastChapter = presenter.chapters.filter { it.read }
+            .maxWithOrNull(presenter.chapterSort.sortComparator(true))
         presenter.markChaptersRead(listOf(item), !read, false)
         snack?.dismiss()
         snack = view?.snack(
@@ -1006,11 +1008,13 @@ class MangaDetailsController :
                 object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
                     override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                         super.onDismissed(transientBottomBar, event)
-                        if (!undoing && !read) {
-                            if (preferences.removeAfterMarkedAsRead()) {
+                        if (!undoing) {
+                            if (!read && preferences.removeAfterMarkedAsRead()) {
                                 presenter.deleteChapters(listOf(item))
                             }
-                            updateTrackChapterMarkedAsRead(db, preferences, chapter, manga?.id) {
+                            val newLastChapter = presenter.chapters.filter { it.read }
+                                .maxWithOrNull(presenter.chapterSort.sortComparator(true))
+                            updateTrackChapterMarkedAsRead(db, preferences, oldLastChapter, newLastChapter, manga?.id) {
                                 presenter.fetchTracks()
                             }
                         }

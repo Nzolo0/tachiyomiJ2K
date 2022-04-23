@@ -490,8 +490,12 @@ class ReaderViewModel(
                     (hasExtraPage && selectedChapter.pages?.lastIndex?.minus(1) == page.index)
                 )
         ) {
+            val chapterSort = ChapterSort(manga!!, chapterFilter, preferences)
+            val oldLastChapter = chapterList.filter { it.chapter.read }.map { it.chapter }
+                .maxWithOrNull(chapterSort.sortComparator(true))
+
             selectedChapter.chapter.read = true
-            updateTrackChapterAfterReading(selectedChapter)
+            updateTrackChapterAfterReading(oldLastChapter, selectedChapter)
             deleteChapterIfNeeded(selectedChapter)
         }
 
@@ -956,14 +960,19 @@ class ReaderViewModel(
      * Starts the service that updates the last chapter read in sync services. This operation
      * will run in a background thread and errors are ignored.
      */
-    private fun updateTrackChapterAfterReading(readerChapter: ReaderChapter) {
+    private fun updateTrackChapterAfterReading(oldLastChapter: Chapter?, newLastChapter: ReaderChapter) {
         if (!preferences.autoUpdateTrack()) return
+        val manga = manga ?: return
 
-        launchIO {
-            val newChapterRead = readerChapter.chapter.chapter_number
-            val errors = updateTrackChapterRead(db, preferences, manga?.id, newChapterRead, true)
-            if (errors.isNotEmpty()) {
-                eventChannel.send(Event.ShareTrackingError(errors))
+        val oldChapterRead = oldLastChapter?.chapter_number ?: 0f
+        val newChapterRead = newLastChapter.chapter.chapter_number
+
+        if (newChapterRead > oldChapterRead) {
+            launchIO {
+                val errors = updateTrackChapterRead(db, preferences, manga.id, oldChapterRead, newChapterRead, true)
+                if (errors.isNotEmpty()) {
+                    eventChannel.send(Event.ShareTrackingError(errors))
+                }
             }
         }
     }

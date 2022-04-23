@@ -35,6 +35,7 @@ import eu.kanade.tachiyomi.ui.library.filter.FilterBottomSheet.Companion.STATE_I
 import eu.kanade.tachiyomi.ui.recents.RecentsPresenter
 import eu.kanade.tachiyomi.util.chapter.ChapterFilter
 import eu.kanade.tachiyomi.util.chapter.ChapterSort
+import eu.kanade.tachiyomi.util.chapter.updateTrackChapterMarkedAsRead
 import eu.kanade.tachiyomi.util.isLocal
 import eu.kanade.tachiyomi.util.lang.capitalizeWords
 import eu.kanade.tachiyomi.util.lang.chopByWords
@@ -1311,12 +1312,19 @@ class LibraryPresenter(
         mangaList: HashMap<Manga, List<Chapter>>,
         markRead: Boolean,
     ) {
-        if (preferences.removeAfterMarkedAsRead() && markRead) {
-            mangaList.forEach { (manga, oldChapters) ->
+        mangaList.forEach { (manga, oldChapters) ->
+            if (preferences.removeAfterMarkedAsRead() && markRead) {
                 deleteChapters(manga, oldChapters)
+                if (preferences.downloadBadge().get()) {
+                    requestDownloadBadgesUpdate()
+                }
             }
-            if (preferences.downloadBadge().get()) {
-                requestDownloadBadgesUpdate()
+            if (preferences.trackMarkedAsRead()) {
+                val chapterSort = ChapterSort(manga, chapterFilter, preferences)
+                val newChapters = db.getChapters(manga).executeAsBlocking()
+                val oldLastChapter = oldChapters.filter { it.read }.maxWithOrNull(chapterSort.sortComparator(true))
+                val newLastChapter = newChapters.filter { it.read }.maxWithOrNull(chapterSort.sortComparator(true))
+                updateTrackChapterMarkedAsRead(db, preferences, oldLastChapter, newLastChapter, manga.id, 0)
             }
         }
     }

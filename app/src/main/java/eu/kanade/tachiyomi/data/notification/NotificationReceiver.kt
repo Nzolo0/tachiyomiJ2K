@@ -24,6 +24,7 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.manga.MangaDetailsController
 import eu.kanade.tachiyomi.ui.more.AboutController
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
+import eu.kanade.tachiyomi.util.chapter.ChapterSort
 import eu.kanade.tachiyomi.util.chapter.updateTrackChapterMarkedAsRead
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.getUriCompat
@@ -207,7 +208,11 @@ class NotificationReceiver : BroadcastReceiver() {
         val db: DatabaseHelper = Injekt.get()
         val preferences: PreferencesHelper = Injekt.get()
         val manga = db.getManga(mangaId).executeAsBlocking() ?: return
-        val chapters = chapterUrls.map {
+        val chapterSort = ChapterSort(manga, Injekt.get(), preferences)
+        val oldChapters = db.getChapters(mangaId).executeAsBlocking()
+        val oldLastChapter = oldChapters.filter { it.read }.maxWithOrNull(chapterSort.sortComparator(true))
+
+        chapterUrls.forEach {
             val chapter = db.getChapter(it, mangaId).executeAsBlocking() ?: return
             chapter.read = true
             db.updateChapterProgress(chapter).executeAsBlocking()
@@ -216,11 +221,11 @@ class NotificationReceiver : BroadcastReceiver() {
                 val source = sourceManager.get(manga.source) ?: return
                 downloadManager.deleteChapters(listOf(chapter), manga, source)
             }
-            return@map chapter
         }
-        val newLastChapter = chapters.maxByOrNull { it.chapter_number.toInt() }
+        val newChapters = db.getChapters(mangaId).executeAsBlocking()
+        val newLastChapter = newChapters.filter { it.read }.maxWithOrNull(chapterSort.sortComparator(true))
         LibraryUpdateJob.updateMutableFlow.tryEmit(manga.id)
-        updateTrackChapterMarkedAsRead(db, preferences, newLastChapter, mangaId, 0)
+        updateTrackChapterMarkedAsRead(db, preferences, oldLastChapter, newLastChapter, mangaId, 0)
     }
 
     /** Method called when user wants to stop a restore

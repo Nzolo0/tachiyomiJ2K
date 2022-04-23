@@ -87,7 +87,7 @@ class MangaDetailsPresenter(
     private val mangaShortcutManager: MangaShortcutManager by injectLazy()
     val sourceManager: SourceManager by injectLazy()
 
-    private val chapterSort = ChapterSort(manga, chapterFilter, preferences)
+    val chapterSort = ChapterSort(manga, chapterFilter, preferences)
     val extension by lazy { (source as? HttpSource)?.getExtension() }
 
     var isLockedFromSearch = false
@@ -508,6 +508,7 @@ class MangaDetailsPresenter(
         lastRead: Int? = null,
         pagesLeft: Int? = null,
     ) {
+        val oldLastChapter = chapters.filter { it.read }.maxWithOrNull(chapterSort.sortComparator(true))
         presenterScope.launch(Dispatchers.IO) {
             selectedChapters.forEach {
                 it.read = read
@@ -522,9 +523,9 @@ class MangaDetailsPresenter(
             }
             getChapters()
             withContext(Dispatchers.Main) { view?.updateChapters(chapters) }
-            if (read && deleteNow) {
-                val latestReadChapter = selectedChapters.maxByOrNull { it.chapter_number.toInt() }?.chapter
-                updateTrackChapterMarkedAsRead(db, preferences, latestReadChapter, manga.id) {
+            if (deleteNow) {
+                val newLastChapter = chapters.filter { it.read }.maxWithOrNull(chapterSort.sortComparator(true))
+                updateTrackChapterMarkedAsRead(db, preferences, oldLastChapter, newLastChapter, manga.id) {
                     fetchTracks()
                 }
             }

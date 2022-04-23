@@ -53,6 +53,7 @@ import eu.kanade.tachiyomi.ui.manga.MangaDetailsController
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.recents.options.TabbedRecentsOptionsSheet
 import eu.kanade.tachiyomi.ui.source.browse.ProgressItem
+import eu.kanade.tachiyomi.util.chapter.ChapterSort
 import eu.kanade.tachiyomi.util.chapter.updateTrackChapterMarkedAsRead
 import eu.kanade.tachiyomi.util.system.addCheckBoxPrompt
 import eu.kanade.tachiyomi.util.system.dpToPx
@@ -87,6 +88,8 @@ import eu.kanade.tachiyomi.util.view.snack
 import eu.kanade.tachiyomi.util.view.updateGradiantBGRadius
 import eu.kanade.tachiyomi.util.view.withFadeTransaction
 import eu.kanade.tachiyomi.widget.LinearLayoutManagerAccurateOffset
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import java.util.Locale
 import kotlin.math.max
 
@@ -846,10 +849,13 @@ class RecentsController(bundle: Bundle? = null) :
         val chapter = holderId?.let { item.mch.extraChapters.find { holderId == it.id } }
             ?: item.chapter
         val manga = item.mch.manga
+        val chapterSort = ChapterSort(manga, Injekt.get(), preferences)
         val lastRead = chapter.last_page_read
         val pagesLeft = chapter.pages_left
         lastChapterId = chapter.id
         val wasRead = chapter.read
+        val oldChapters = db.getChapters(manga).executeAsBlocking()
+        val oldLastChapter = oldChapters.filter { it.read }.maxWithOrNull(chapterSort.sortComparator(true))
         presenter.markChapterRead(chapter, !wasRead)
         snack = view?.snack(
             if (wasRead) {
@@ -869,12 +875,15 @@ class RecentsController(bundle: Bundle? = null) :
                 object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
                     override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                         super.onDismissed(transientBottomBar, event)
-                        if (!undoing && !wasRead) {
-                            if (preferences.removeAfterMarkedAsRead()) {
+                        if (!undoing) {
+                            if (!wasRead && preferences.removeAfterMarkedAsRead()) {
                                 lastChapterId = chapter.id
                                 presenter.deleteChapter(chapter, manga)
                             }
-                            updateTrackChapterMarkedAsRead(db, preferences, chapter, manga.id) {
+                            val newChapters = db.getChapters(manga).executeAsBlocking()
+                            val newLastChapter = newChapters.filter { it.read }
+                                .maxWithOrNull(chapterSort.sortComparator(true))
+                            updateTrackChapterMarkedAsRead(db, preferences, oldLastChapter, newLastChapter, manga.id) {
                                 (router.backstack.lastOrNull()?.controller as? MangaDetailsController)?.presenter?.fetchTracks()
                             }
                         }
