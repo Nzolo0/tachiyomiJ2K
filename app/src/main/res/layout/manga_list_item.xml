@@ -64,7 +64,7 @@
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/title"
-        style="?textAppearanceLabelLarge"
+        style="?textAppearanceTitleSmall"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"

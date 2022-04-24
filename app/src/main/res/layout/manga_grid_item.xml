@@ -111,7 +111,7 @@
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/compact_title"
-                style="?textAppearanceLabelMedium"
+                style="?textAppearanceTitleSmall"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
@@ -120,6 +120,10 @@
                 android:layout_marginBottom="4dp"
                 android:ellipsize="end"
                 android:maxLines="2"
+                android:shadowColor="@color/md_black_1000"
+                android:shadowDx="0"
+                android:shadowDy="0"
+                android:shadowRadius="4"
                 android:textColor="@android:color/white"
                 android:textSize="13sp"
                 tools:text="Sample name" />
