@@ -101,6 +101,16 @@ class ChapterCache(private val context: Context) {
         )
     }
 
+    fun clear(): Int {
+        var deletedFiles = 0
+        cacheDir.listFiles()?.forEach {
+            if (removeFileFromCache(it.name)) {
+                deletedFiles++
+            }
+        }
+        return deletedFiles
+    }
+
     /**
      * Remove file from cache.
      *

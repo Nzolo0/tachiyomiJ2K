@@ -477,11 +477,14 @@ class PreferencesHelper(val context: Context) {
 
     fun chaptersDescAsDefault() = flowPrefs.getBoolean(Keys.chaptersDescAsDefault, true)
 
-    fun sortChapterByAscendingOrDescending() = prefs.getInt(Keys.defaultChapterSortByAscendingOrDescending, Manga.CHAPTER_SORT_DESC)
+    fun sortChapterByAscendingOrDescending() =
+        prefs.getInt(Keys.defaultChapterSortByAscendingOrDescending, Manga.CHAPTER_SORT_DESC)
 
     fun coverRatios() = flowPrefs.getStringSet(Keys.coverRatios, emptySet())
 
     fun coverColors() = flowPrefs.getStringSet(Keys.coverColors, emptySet())
 
     fun useStaggeredGrid() = flowPrefs.getBoolean("use_staggered_grid", false)
+
+    fun autoClearChapterCache() = flowPrefs.getBoolean("auto_clear_chapter_cache", false)
 }

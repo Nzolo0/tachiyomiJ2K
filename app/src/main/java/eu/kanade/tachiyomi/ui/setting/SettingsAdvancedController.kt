@@ -188,6 +188,11 @@ class SettingsAdvancedController : SettingsController() {
                 onClick { clearChapterCache() }
             }
 
+            switchPreference {
+                bindTo(preferences.autoClearChapterCache())
+                titleRes = R.string.pref_auto_clear_chapter_cache
+            }
+
             preference {
                 titleRes = R.string.force_download_cache_refresh
                 summaryRes = R.string.force_download_cache_refresh_summary

@@ -73,6 +73,8 @@ import com.google.common.primitives.Ints.max
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.Migrations
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.cache.ChapterCache
+import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.download.DownloadJob
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
@@ -176,6 +178,9 @@ open class MainActivity : BaseActivity<MainActivityBinding>() {
     var ogWidth: Int = Int.MAX_VALUE
     var hingeGapSize = 0
         private set
+
+    private val chapterCache: ChapterCache by injectLazy()
+    private val coverCache: CoverCache by injectLazy()
 
     val velocityTracker: VelocityTracker by lazy { VelocityTracker.obtain() }
     private val actionButtonSize: Pair<Int, Int> by lazy {
@@ -1121,6 +1126,14 @@ open class MainActivity : BaseActivity<MainActivityBinding>() {
             SecureActivityDelegate.locked = true
         }
         saveExtras()
+        // Regular back (i.e. closing the app)
+        if (preferences.autoClearChapterCache().get()) {
+            chapterCache.clear()
+            lifecycleScope.launchIO {
+                coverCache.deleteOldCovers()
+                coverCache.deleteAllCachedCovers()
+            }
+        }
         super.finish()
     }
 
