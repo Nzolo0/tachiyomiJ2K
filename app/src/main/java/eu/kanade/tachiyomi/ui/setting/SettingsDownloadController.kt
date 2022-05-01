@@ -101,6 +101,20 @@ class SettingsDownloadController : SettingsController() {
                 bindTo(preferences.downloadNewChapters())
                 titleRes = R.string.download_new_chapters
             }
+            intListPreference(activity) {
+                bindTo(preferences.downloadNewRestrictions())
+                titleRes = R.string.download_new_restrictions
+                entries = listOf(
+                    context.resources.getQuantityString(R.plurals.next_unread_chapters, 1, 1),
+                    context.resources.getQuantityString(R.plurals.next_unread_chapters, 2, 2),
+                    context.resources.getQuantityString(R.plurals.next_unread_chapters, 3, 3),
+                    context.resources.getQuantityString(R.plurals.next_unread_chapters, 5, 5),
+                    context.getString(R.string.all_unread_chapters),
+                )
+                entryValues = listOf(1, 2, 3, 5, -1)
+
+                preferences.downloadNewChapters().asImmediateFlowIn(viewScope) { isVisible = it }
+            }
             triStateListPreference(activity) {
                 preferences.apply {
                     bindTo(downloadNewChaptersInCategories(), excludeCategoriesInDownloadNew())
@@ -109,6 +123,13 @@ class SettingsDownloadController : SettingsController() {
                 entries = categories.map { it.name }
                 entryValues = categories.map { it.id.toString() }
                 allSelectionRes = R.string.all
+
+                preferences.downloadNewChapters().asImmediateFlowIn(viewScope) { isVisible = it }
+            }
+            switchPreference {
+                bindTo(preferences.downloadOnlyCompletelyRead())
+                titleRes = R.string.pref_download_only_completely_read
+                summaryRes = R.string.pref_download_only_completely_read_summary
 
                 preferences.downloadNewChapters().asImmediateFlowIn(viewScope) { isVisible = it }
             }

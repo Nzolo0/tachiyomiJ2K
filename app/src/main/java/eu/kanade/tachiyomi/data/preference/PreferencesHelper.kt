@@ -316,10 +316,14 @@ class PreferencesHelper(val context: Context) {
 
     fun splitTallImages() = flowPrefs.getBoolean("split_tall_images", false)
 
-    fun downloadNewChapters() = flowPrefs.getBoolean(Keys.downloadNew, false)
+    fun downloadNewChapters() = flowPrefs.getBoolean("download_new", false)
+
+    fun downloadNewRestrictions() = flowPrefs.getInt("download_new_restrictions", 2)
 
     fun downloadNewChaptersInCategories() = flowPrefs.getStringSet("download_new_categories", emptySet())
     fun excludeCategoriesInDownloadNew() = flowPrefs.getStringSet("download_new_categories_exclude", emptySet())
+
+    fun downloadOnlyCompletelyRead() = flowPrefs.getBoolean("download_only_completely_read", false)
 
     fun autoDownloadWhileReading() = flowPrefs.getInt("auto_download_while_reading", 0)
 

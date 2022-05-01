@@ -44,6 +44,9 @@ import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.ui.manga.chapter.ChapterItem
+import eu.kanade.tachiyomi.util.chapter.ChapterFilter
+import eu.kanade.tachiyomi.util.chapter.ChapterSort
 import eu.kanade.tachiyomi.util.chapter.syncChaptersWithSource
 import eu.kanade.tachiyomi.util.chapter.syncChaptersWithTrackServiceTwoWay
 import eu.kanade.tachiyomi.util.manga.MangaShortcutManager
@@ -378,7 +381,10 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         val httpSource = sourceManager.get(source) as? HttpSource ?: return false
         while (count < mangaToUpdateMap[source]!!.size) {
             val manga = mangaToUpdateMap[source]!![count]
-            val shouldDownload = manga.shouldDownloadNewChapters(db, preferences)
+            val noUnreadChapters = manga.unread == 0
+            val downloadOnlyCompletelyRead = preferences.downloadOnlyCompletelyRead().get()
+            val shouldDownload = (!downloadOnlyCompletelyRead || noUnreadChapters) &&
+                    manga.shouldDownloadNewChapters(db, preferences)
             if (updateMangaChapters(manga, this.count.andIncrement, httpSource, shouldDownload)) {
                 hasDownloads = true
             }
@@ -403,11 +409,8 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             if (fetchedChapters.isNotEmpty()) {
                 val newChapters = syncChaptersWithSource(db, fetchedChapters, manga, source)
                 if (newChapters.first.isNotEmpty()) {
-                    if (shouldDownload) {
-                        downloadChapters(
-                            manga,
-                            newChapters.first.sortedBy { it.chapter_number },
-                        )
+                    if (shouldDownload && manga.initialized) {
+                        prepareDownloadChapters(manga, newChapters.first.sortedBy { it.chapter_number })
                         hasDownloads = true
                     }
                     newUpdates[manga] =
@@ -435,6 +438,38 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 Timber.e("Failed updating: ${manga.title}: $e")
             }
             return@coroutineScope false
+        }
+    }
+
+    /**
+     * Method to filter which chapters should be downloaded among the new chapters
+     */
+    private fun prepareDownloadChapters(manga: Manga, newChapters: List<Chapter>) {
+        val chaptersDatabase = db.getChapters(manga).executeAsBlocking()
+            .map { ChapterItem(it, manga) }
+        val newChaptersIds = newChapters.map { it.id }
+
+        val chapterFilter: ChapterFilter = Injekt.get()
+        val chapterSort = ChapterSort(manga, chapterFilter, preferences)
+        val chaptersNumberRestrictions = preferences.downloadNewRestrictions().get()
+        val chaptersUnread = chaptersDatabase.filter { !it.read }
+            .distinctBy { it.name }
+            .sortedWith(chapterSort.sortComparator(true))
+            .filter { it.id !in newChaptersIds }
+
+        var chaptersToDownload = newChapters
+        var shouldDownload = true
+        if (chaptersNumberRestrictions != -1) {
+            val chaptersUnreadDownloadedNumber = chaptersUnread.takeLast(chaptersNumberRestrictions)
+                .takeLastWhile { it.isDownloaded }.count()
+
+            chaptersToDownload = newChapters.take(
+                (chaptersNumberRestrictions - chaptersUnreadDownloadedNumber).coerceAtLeast(0),
+            )
+            shouldDownload = chaptersUnreadDownloadedNumber != 0
+        }
+        if ((chaptersUnread.isEmpty() || shouldDownload) && chaptersToDownload.isNotEmpty()) {
+            downloadChapters(manga, chaptersToDownload)
         }
     }
 

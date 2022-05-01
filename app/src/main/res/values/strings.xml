@@ -1004,6 +1004,9 @@
     <string name="auto_download_while_reading">Auto download while reading</string>
     <string name="download_ahead_info">Only works on entries in library and if the current chapter plus the next one are already downloaded</string>
     <string name="download_new_chapters">Download new chapters</string>
+    <string name="download_new_restrictions">Download new chapters restrictions</string>
+    <string name="pref_download_only_completely_read">Only download completely read manga</string>
+    <string name="pref_download_only_completely_read_summary">Only download manga if there is no unread chapter (completely read)</string>
     <string name="categories_to_include_in_download">Categories to include in download</string>
     <string name="delete_removed_chapters">Delete removed chapters</string>
     <string name="delete_downloaded_if_removed_online">Delete downloaded chapters if the source
