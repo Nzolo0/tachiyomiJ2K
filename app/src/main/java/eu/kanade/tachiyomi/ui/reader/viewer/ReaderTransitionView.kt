@@ -63,12 +63,13 @@ class ReaderTransitionView @JvmOverloads constructor(context: Context, attrs: At
             binding.upperText.text = buildSpannedString {
                 bold { append(context.getString(R.string.previous_title)) }
                 append("\n${prevChapter.chapter.preferredChapterName(context, manga, preferences)}")
-                if (isPrevDownloaded != isCurrentDownloaded) addDLImageSpan(isPrevDownloaded)
+                if (isPrevDownloaded) addDLImageSpan()
             }
             binding.lowerText.text = buildSpannedString {
                 bold { append(context.getString(R.string.current_chapter)) }
                 val name = transition.from.chapter.preferredChapterName(context, manga, preferences)
                 append("\n$name")
+                if (isCurrentDownloaded) addDLImageSpan()
             }
         } else {
             binding.upperText.textAlignment = TEXT_ALIGNMENT_CENTER
@@ -95,11 +96,12 @@ class ReaderTransitionView @JvmOverloads constructor(context: Context, attrs: At
                 bold { append(context.getString(R.string.finished_chapter)) }
                 val name = transition.from.chapter.preferredChapterName(context, manga, preferences)
                 append("\n$name")
+                if (isCurrentDownloaded) addDLImageSpan()
             }
             binding.lowerText.text = buildSpannedString {
                 bold { append(context.getString(R.string.next_title)) }
                 append("\n${nextChapter.chapter.preferredChapterName(context, manga, preferences)}")
-                if (isNextDownloaded != isCurrentDownloaded) addDLImageSpan(isNextDownloaded)
+                if (isNextDownloaded) addDLImageSpan()
             }
         } else {
             binding.upperText.textAlignment = TEXT_ALIGNMENT_CENTER
@@ -107,11 +109,8 @@ class ReaderTransitionView @JvmOverloads constructor(context: Context, attrs: At
         }
     }
 
-    private fun SpannableStringBuilder.addDLImageSpan(isDownloaded: Boolean) {
-        val icon = context.contextCompatDrawable(
-            if (isDownloaded) R.drawable.ic_file_download_24dp else R.drawable.ic_cloud_24dp,
-        )
-            ?.mutate()
+    private fun SpannableStringBuilder.addDLImageSpan() {
+        val icon = context.contextCompatDrawable(R.drawable.ic_file_download_24dp)?.mutate()
             ?.apply {
                 val size = binding.lowerText.textSize + 4f.dpToPx
                 setTint(binding.lowerText.currentTextColor)
