@@ -419,7 +419,14 @@
     <string name="fourth_to_last">Fourth to last read chapter</string>
     <string name="fifth_to_last">Fifth to last read chapter</string>
     <string name="pref_category_auto_download">Auto-download</string>
-    <string name="pref_download_new">Download new chapters</string>
+    <string name="pref_download_new">Download new chapters until limit (per title)</string>
+    <plurals name="download_new_chapters_limit">
+        <item quantity="one">%d unread chapter</item>
+        <item quantity="other">%d unread chapters</item>
+    </plurals>
+    <string name="all_new_chapters">All new chapters</string>
+    <string name="pref_download_new_restriction">Automatic download device restrictions</string>
+    <string name="pref_download_new_skip_unread">Skip titles with unread chapter(s)</string>
     <string name="pref_download_new_categories_details">Manga in excluded categories will not be downloaded even if they are also in included categories.</string>
     <string name="download_ahead">Download ahead</string>
     <string name="auto_download_while_reading">Auto download while reading</string>
@@ -857,6 +864,10 @@
     <string name="download_notifier_split_page_not_found">Page %d not found while splitting</string>
     <string name="download_notifier_split_page_path_not_found">Couldn\'t find file path of page %d</string>
     <string name="download_notifier_split_failed">Couldn\'t split downloaded image</string>
+    <string name="download_notifier_auto_download_restrictions">Auto-download restrictions not met</string>
+    <string name="auto_download">Auto</string>
+    <string name="convert_auto">Convert to normal download</string>
+    <string name="convert_autos">Convert auto to normal downloads</string>
 
     <!-- Notification channels -->
     <string name="channel_common">Common</string>

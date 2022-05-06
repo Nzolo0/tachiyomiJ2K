@@ -93,13 +93,13 @@ class DownloadStore(
         val downloads = mutableListOf<Download>()
         if (objs.isNotEmpty()) {
             val cachedManga = mutableMapOf<Long, Manga?>()
-            for ((mangaId, chapterId) in objs) {
+            for ((mangaId, chapterId, _, isAuto) in objs) {
                 val manga = cachedManga.getOrPut(mangaId) {
                     runBlocking { getManga.await(mangaId) }
                 } ?: continue
                 val source = sourceManager.get(manga.source) as? HttpSource ?: continue
                 val chapter = runBlocking { getChapter.await(chapterId) }?.toDbChapter() ?: continue
-                downloads.add(Download(source, manga, chapter))
+                downloads.add(Download(source, manga, chapter, isAutoAndRestricted = isAuto))
             }
         }
 
@@ -114,7 +114,7 @@ class DownloadStore(
      * @param download the download to serialize.
      */
     private fun serialize(download: Download): String {
-        val obj = DownloadObject(download.manga.id, download.chapter.id!!, counter++)
+        val obj = DownloadObject(download.manga.id, download.chapter.id!!, counter++, download.isAutoAndRestricted)
         return json.encodeToString(obj)
     }
 
@@ -139,5 +139,5 @@ class DownloadStore(
      * @param order the order of the download in the queue.
      */
     @Serializable
-    data class DownloadObject(val mangaId: Long, val chapterId: Long, val order: Int)
+    data class DownloadObject(val mangaId: Long, val chapterId: Long, val order: Int, val isAuto: Boolean)
 }

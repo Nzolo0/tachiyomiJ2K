@@ -40,5 +40,9 @@
         android:id="@+id/clear_queue"
         android:title="@string/action_cancel_all"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/convert_autos"
+        android:title="@string/convert_autos"
+        app:showAsAction="never" />
 
 </menu>

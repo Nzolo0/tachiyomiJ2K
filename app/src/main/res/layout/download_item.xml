@@ -48,12 +48,13 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
+            android:layout_marginEnd="8dp"
             android:layout_toEndOf="@id/reorder"
             android:ellipsize="end"
             android:maxLines="1"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textSize="12sp"
-            app:layout_constraintEnd_toStartOf="@+id/menu"
+            app:layout_constraintEnd_toStartOf="@+id/chapter_auto"
             app:layout_constraintStart_toStartOf="@+id/manga_full_title"
             app:layout_constraintTop_toBottomOf="@+id/manga_full_title"
             tools:text="Chapter Title" />
@@ -82,6 +83,21 @@
             app:layout_constraintEnd_toStartOf="@+id/menu"
             app:layout_constraintTop_toTopOf="@+id/manga_full_title"
             tools:text="0/10" />
+
+        <TextView
+            android:id="@+id/chapter_auto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/chapter_title"
+            android:maxLines="1"
+            android:text="@string/auto_download"
+            android:textAllCaps="true"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="@color/error"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="@+id/chapter_title"
+            app:layout_constraintEnd_toStartOf="@+id/menu"
+            app:layout_constraintTop_toTopOf="@+id/chapter_title" />
 
         <ImageButton
             android:id="@+id/menu"

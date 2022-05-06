@@ -21,4 +21,8 @@
         android:id="@+id/cancel_series"
         android:title="@string/cancel_all_for_series" />
 
+    <item
+        android:id="@+id/convert_auto"
+        android:title="@string/convert_auto" />
+
 </menu>

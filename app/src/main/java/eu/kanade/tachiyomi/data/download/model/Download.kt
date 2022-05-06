@@ -17,6 +17,7 @@ data class Download(
     val manga: Manga,
     val chapter: Chapter,
     var pages: List<Page>? = null,
+    var isAutoAndRestricted: Boolean = false,
 ) {
 
     @Volatile

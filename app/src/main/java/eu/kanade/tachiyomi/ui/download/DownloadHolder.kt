@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.download
 
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.ItemTouchHelper
 import eu.davidea.viewholders.FlexibleViewHolder
 import eu.kanade.tachiyomi.R
@@ -39,6 +40,7 @@ class DownloadHolder(private val view: View, val adapter: DownloadAdapter) :
 
         // Update the manga title
         binding.mangaFullTitle.text = download.manga.title
+        binding.chapterAuto.isVisible = download.isAutoAndRestricted
 
         // Update the progress bar and the number of downloaded pages
         val pages = download.pages
@@ -92,6 +94,7 @@ class DownloadHolder(private val view: View, val adapter: DownloadAdapter) :
                 findItem(R.id.move_to_top).isVisible = bindingAdapterPosition > 1
                 findItem(R.id.move_to_bottom).isVisible =
                     bindingAdapterPosition != adapter.itemCount - 1
+                findItem(R.id.convert_auto).isVisible = binding.chapterAuto.isVisible
             },
             onMenuItemClick = {
                 adapter.downloadItemListener.onMenuItemClick(bindingAdapterPosition, this)

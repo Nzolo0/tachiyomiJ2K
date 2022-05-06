@@ -2,6 +2,7 @@ package eu.kanade.domain.download.service
 
 import eu.kanade.tachiyomi.core.preference.PreferenceStore
 import eu.kanade.tachiyomi.core.provider.FolderProvider
+import eu.kanade.tachiyomi.data.preference.DEVICE_ONLY_ON_WIFI
 
 class DownloadPreferences(
     private val folderProvider: FolderProvider,
@@ -26,9 +27,16 @@ class DownloadPreferences(
 
     fun removeExcludeCategories() = preferenceStore.getStringSet("remove_exclude_categories", emptySet())
 
-    fun downloadNewChapters() = preferenceStore.getBoolean("download_new", false)
+    fun downloadNewChapters() = preferenceStore.getInt("download_new_chapters", 0)
 
     fun downloadNewChapterCategories() = preferenceStore.getStringSet("download_new_categories", emptySet())
 
     fun downloadNewChapterCategoriesExclude() = preferenceStore.getStringSet("download_new_categories_exclude", emptySet())
+
+    fun downloadNewDeviceRestriction() = preferenceStore.getStringSet(
+        "download_new_update_restriction",
+        setOf(DEVICE_ONLY_ON_WIFI),
+    )
+
+    fun downloadNewSkipUnread() = preferenceStore.getBoolean("download_new_skip_unread", false)
 }

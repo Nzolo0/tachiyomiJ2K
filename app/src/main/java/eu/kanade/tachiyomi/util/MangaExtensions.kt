@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.util
 
 import android.content.Context
+import eu.kanade.domain.chapter.model.Chapter
 import eu.kanade.domain.download.service.DownloadPreferences
 import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.manga.model.hasCustomCover
@@ -11,6 +12,7 @@ import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.database.models.toDomainManga
 import eu.kanade.tachiyomi.source.LocalSource
 import eu.kanade.tachiyomi.source.model.SManga
+import eu.kanade.tachiyomi.util.chapter.getChapterSort
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.InputStream
@@ -64,7 +66,7 @@ fun DomainManga.shouldDownloadNewChapters(dbCategories: List<Long>, preferences:
 
     // Boolean to determine if user wants to automatically download new chapters.
     val downloadNewChapters = preferences.downloadNewChapters().get()
-    if (!downloadNewChapters) return false
+    if (downloadNewChapters == 0) return false
 
     val includedCategories = preferences.downloadNewChapterCategories().get().map { it.toLong() }
     val excludedCategories = preferences.downloadNewChapterCategoriesExclude().get().map { it.toLong() }
@@ -94,5 +96,27 @@ suspend fun DomainManga.editCover(
     } else if (favorite) {
         coverCache.setCustomCoverToCache(toDbManga(), stream)
         updateManga.awaitUpdateCoverLastModified(id)
+    }
+}
+
+/**
+ * Filter the chapters to download among the new chapters of a manga
+ */
+fun DomainManga.getChaptersToDownload(
+    newChapters: List<Chapter>,
+    hasUnreadChapters: Boolean,
+    downloadedUnreadChaptersCount: Int,
+    downloadPreferences: DownloadPreferences,
+): List<Chapter> {
+    val skipWhenUnreadChapters = downloadPreferences.downloadNewSkipUnread().get()
+    val downloadNewChaptersLimit = downloadPreferences.downloadNewChapters().get()
+
+    if (skipWhenUnreadChapters && hasUnreadChapters) return emptyList()
+
+    return if (downloadNewChaptersLimit != -1) {
+        newChapters.sortedWith(getChapterSort(this, false))
+            .take((downloadNewChaptersLimit - downloadedUnreadChaptersCount).coerceAtLeast(0))
+    } else {
+        newChapters
     }
 }

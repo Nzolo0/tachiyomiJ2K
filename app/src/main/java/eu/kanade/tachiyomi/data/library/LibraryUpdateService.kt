@@ -28,7 +28,6 @@ import eu.kanade.domain.track.model.toDomainTrack
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.database.models.Chapter
-import eu.kanade.tachiyomi.data.database.models.toDomainChapter
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.DownloadService
 import eu.kanade.tachiyomi.data.library.LibraryUpdateService.Companion.start
@@ -43,6 +42,7 @@ import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
+import eu.kanade.tachiyomi.util.getChaptersToDownload
 import eu.kanade.tachiyomi.util.lang.withIOContext
 import eu.kanade.tachiyomi.util.prepUpdateCover
 import eu.kanade.tachiyomi.util.shouldDownloadNewChapters
@@ -352,20 +352,36 @@ class LibraryUpdateService(
 
                                             else -> {
                                                 val newChapters = updateManga(manga)
-                                                val newDbChapters = newChapters.map { it.toDbChapter() }
 
                                                 if (newChapters.isNotEmpty()) {
                                                     val categoryIds = getCategories.await(manga.id).map { it.id }
                                                     if (manga.shouldDownloadNewChapters(categoryIds, downloadPreferences)) {
-                                                        downloadChapters(manga, newDbChapters)
+                                                        val chaptersDatabase = getChapterByMangaId.await(manga.id)
+
+                                                        val unreadChapters = chaptersDatabase.minus(newChapters).filter { !it.read }
+                                                        val downloadedUnreadChaptersCount = unreadChapters.count {
+                                                            downloadManager.isChapterDownloaded(
+                                                                it.name,
+                                                                it.scanlator,
+                                                                manga.title,
+                                                                manga.source,
+                                                            )
+                                                        }
+
+                                                        val chaptersToDownload = manga.getChaptersToDownload(
+                                                            newChapters,
+                                                            unreadChapters.isNotEmpty(),
+                                                            downloadedUnreadChaptersCount,
+                                                            downloadPreferences,
+                                                        ).map(DomainChapter::toDbChapter)
+                                                        downloadChapters(manga, chaptersToDownload)
                                                         hasDownloads.set(true)
                                                     }
 
                                                     // Convert to the manga that contains new chapters
                                                     newUpdates.add(
                                                         manga to
-                                                            newDbChapters
-                                                                .map { it.toDomainChapter()!! }
+                                                            newChapters
                                                                 .sortedByDescending { it.sourceOrder }
                                                                 .toTypedArray(),
                                                     )
@@ -419,7 +435,7 @@ class LibraryUpdateService(
     private fun downloadChapters(manga: Manga, chapters: List<Chapter>) {
         // We don't want to start downloading while the library is updating, because websites
         // may don't like it and they could ban the user.
-        downloadManager.downloadChapters(manga, chapters, false)
+        downloadManager.downloadChapters(manga, chapters, autoStart = false, isAutoDownload = true)
     }
 
     /**

@@ -17,6 +17,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.net.wifi.WifiManager
+import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
@@ -184,6 +185,9 @@ val Context.powerManager: PowerManager
     get() = getSystemService()!!
 
 val Context.keyguardManager: KeyguardManager
+    get() = getSystemService()!!
+
+val Context.batteryManager: BatteryManager
     get() = getSystemService()!!
 
 val Context.inputMethodManager: InputMethodManager

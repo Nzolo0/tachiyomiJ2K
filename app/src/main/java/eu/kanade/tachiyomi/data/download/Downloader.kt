@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.download
 
 import android.content.Context
+import android.os.BatteryManager
 import com.hippo.unifile.UniFile
 import com.jakewharton.rxrelay.BehaviorRelay
 import com.jakewharton.rxrelay.PublishRelay
@@ -13,6 +14,9 @@ import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.download.model.DownloadQueue
 import eu.kanade.tachiyomi.data.library.LibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
+import eu.kanade.tachiyomi.data.preference.DEVICE_BATTERY_NOT_LOW
+import eu.kanade.tachiyomi.data.preference.DEVICE_CHARGING
+import eu.kanade.tachiyomi.data.preference.DEVICE_ONLY_ON_WIFI
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.source.model.Page
@@ -26,6 +30,8 @@ import eu.kanade.tachiyomi.util.lang.withUIContext
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.saveTo
 import eu.kanade.tachiyomi.util.system.ImageUtil
+import eu.kanade.tachiyomi.util.system.batteryManager
+import eu.kanade.tachiyomi.util.system.isConnectedToWifi
 import eu.kanade.tachiyomi.util.system.logcat
 import kotlinx.coroutines.async
 import logcat.LogPriority
@@ -125,12 +131,23 @@ class Downloader(
         }
 
         val pending = queue.filter { it.status != Download.State.DOWNLOADED }
-        pending.forEach { if (it.status != Download.State.QUEUE) it.status = Download.State.QUEUE }
+        val hasRestrictions = if (pending.any { it.isAutoAndRestricted }) hasAutoDownloadRestrictions() else false
+        pending.forEach {
+            if (it.status != Download.State.QUEUE || (it.isAutoAndRestricted && !hasRestrictions)) {
+                it.status = Download.State.QUEUE
+                it.isAutoAndRestricted = false
+            }
+        }
 
         notifier.paused = false
 
         downloadsRelay.call(pending)
-        return pending.isNotEmpty()
+        return if (pending.all { it.isAutoAndRestricted }) {
+            notifier.onWarning(context.getString(R.string.download_notifier_auto_download_restrictions))
+            false
+        } else {
+            pending.isNotEmpty()
+        }
     }
 
     /**
@@ -147,9 +164,9 @@ class Downloader(
             return
         }
 
-        if (notifier.paused && !queue.isEmpty()) {
+        if (notifier.paused && queue.isNotEmpty()) {
             notifier.onPaused()
-        } else {
+        } else if (queue.isEmpty()) {
             notifier.onComplete()
         }
 
@@ -201,6 +218,7 @@ class Downloader(
         subscriptions.clear()
 
         subscriptions += downloadsRelay.concatMapIterable { it }
+            .filter { !it.isAutoAndRestricted }
             // Concurrently download from 5 different sources
             .groupBy { it.source }
             .flatMap(
@@ -243,9 +261,8 @@ class Downloader(
      * @param chapters the list of chapters to download.
      * @param autoStart whether to start the downloader after enqueing the chapters.
      */
-    fun queueChapters(manga: Manga, chapters: List<Chapter>, autoStart: Boolean) = launchIO {
+    fun queueChapters(manga: Manga, chapters: List<Chapter>, autoStart: Boolean, hasRestrictions: Boolean = false) = launchIO {
         val source = sourceManager.get(manga.source) as? HttpSource ?: return@launchIO
-        val wasEmpty = queue.isEmpty()
         // Called in background thread, the operation can be slow with SAF.
         val chaptersWithoutDir = async {
             chapters
@@ -260,7 +277,7 @@ class Downloader(
             // Filter out those already enqueued.
             .filter { chapter -> queue.none { it.chapter.id == chapter.id } }
             // Create a download for each one.
-            .map { Download(source, manga, it) }
+            .map { Download(source, manga, it, isAutoAndRestricted = hasRestrictions) }
 
         if (chaptersToQueue.isNotEmpty()) {
             queue.addAll(chaptersToQueue)
@@ -271,7 +288,7 @@ class Downloader(
             }
 
             // Start downloader if needed
-            if (autoStart && wasEmpty) {
+            if (autoStart && !DownloadService.isRunning(context)) {
                 val queuedDownloads = queue.count { it.source !is UnmeteredSource }
                 val maxDownloadsFromSource = queue
                     .groupBy { it.source }
@@ -580,6 +597,9 @@ class Downloader(
         }
         if (areAllDownloadsFinished()) {
             DownloadService.stop(context)
+        } else if (onlyAutoAndRestrictedDownloads()) {
+            pause()
+            if (!start()) DownloadService.stop(context)
         }
     }
 
@@ -587,7 +607,27 @@ class Downloader(
      * Returns true if all the queued downloads are in DOWNLOADED or ERROR state.
      */
     private fun areAllDownloadsFinished(): Boolean {
-        return queue.none { it.status.value <= Download.State.DOWNLOADING.value }
+        return queue.none { it.status <= Download.State.DOWNLOADING }
+    }
+
+    /**
+     * Returns true if all the queued downloads are autoAndRestricted.
+     */
+    private fun onlyAutoAndRestrictedDownloads(): Boolean {
+        return queue.all { it.isAutoAndRestricted }
+    }
+
+    /**
+     * Returns true if any of the auto-download restrictions is not met
+     */
+    fun hasAutoDownloadRestrictions(): Boolean {
+        val restrictions = downloadPreferences.downloadNewDeviceRestriction().get()
+        val batteryManager = context.batteryManager
+        val batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+
+        return (DEVICE_ONLY_ON_WIFI in restrictions && !context.isConnectedToWifi()) ||
+            (DEVICE_CHARGING in restrictions && !batteryManager.isCharging) ||
+            (DEVICE_BATTERY_NOT_LOW in restrictions && batteryLevel <= 15)
     }
 
     companion object {

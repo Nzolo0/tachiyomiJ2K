@@ -210,6 +210,13 @@ class DownloadController :
                                             onExpanded(false)
                                         },
                                     )
+                                    DropdownMenuItem(
+                                        text = { Text(text = stringResource(id = R.string.convert_autos)) },
+                                        onClick = {
+                                            presenter.convertToNormal()
+                                            onExpanded(false)
+                                        },
+                                    )
                                 }
                             }
                         }
@@ -489,6 +496,9 @@ class DownloadController :
                     if (!allDownloadsForSeries.isNullOrEmpty()) {
                         presenter.cancelDownloads(allDownloadsForSeries)
                     }
+                }
+                R.id.convert_auto -> {
+                    presenter.convertToNormal(listOf(item.download))
                 }
             }
         }

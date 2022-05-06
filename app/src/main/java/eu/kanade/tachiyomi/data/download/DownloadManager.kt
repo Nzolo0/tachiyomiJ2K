@@ -103,7 +103,7 @@ class DownloadManager(
 
     fun startDownloadNow(chapterId: Long?) {
         if (chapterId == null) return
-        val download = downloader.queue.find { it.chapter.id == chapterId }
+        val download = downloader.queue.find { it.chapter.id == chapterId }?.apply { isAutoAndRestricted = false }
         // If not in queue try to start a new download
         val toAdd = download ?: runBlocking { Download.fromChapterId(chapterId) } ?: return
         val queue = downloader.queue.toMutableList()
@@ -143,14 +143,38 @@ class DownloadManager(
     }
 
     /**
+     * Reorders the download queue.
+     *
+     * @param downloads value to set the download queue to
+     */
+    fun convertToNormal(downloads: List<Download>) {
+        val wasRunning = downloader.isRunning
+
+        if (downloads.isEmpty()) {
+            DownloadService.stop(context)
+            downloader.queue.clear()
+            return
+        }
+
+        downloader.pause()
+        queue.forEach { if (it in downloads) it.isAutoAndRestricted = false }
+
+        if (wasRunning) {
+            downloader.start()
+        }
+    }
+
+    /**
      * Tells the downloader to enqueue the given list of chapters.
      *
      * @param manga the manga of the chapters.
      * @param chapters the list of chapters to enqueue.
      * @param autoStart whether to start the downloader after enqueing the chapters.
      */
-    fun downloadChapters(manga: Manga, chapters: List<Chapter>, autoStart: Boolean = true) {
-        downloader.queueChapters(manga, chapters, autoStart)
+    fun downloadChapters(manga: Manga, chapters: List<Chapter>, autoStart: Boolean = true, isAutoDownload: Boolean = false) {
+        val hasAutoRestrictions = downloader.hasAutoDownloadRestrictions()
+        downloader.queueChapters(manga, chapters, autoStart, isAutoDownload && hasAutoRestrictions)
+        if (!hasAutoRestrictions && queue.any { it.isAutoAndRestricted }) reorderQueue(queue.map { it.apply { isAutoAndRestricted = false } })
     }
 
     /**

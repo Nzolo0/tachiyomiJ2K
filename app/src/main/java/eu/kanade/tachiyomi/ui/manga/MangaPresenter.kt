@@ -44,6 +44,7 @@ import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
 import eu.kanade.tachiyomi.ui.manga.track.TrackItem
 import eu.kanade.tachiyomi.util.chapter.getChapterSort
+import eu.kanade.tachiyomi.util.getChaptersToDownload
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.launchNonCancellable
 import eu.kanade.tachiyomi.util.lang.toRelativeString
@@ -641,9 +642,9 @@ class MangaPresenter(
      * Downloads the given list of chapters with the manager.
      * @param chapters the list of chapters to download.
      */
-    fun downloadChapters(chapters: List<DomainChapter>) {
+    fun downloadChapters(chapters: List<DomainChapter>, isAutoDownload: Boolean = false) {
         val manga = successState?.manga ?: return
-        downloadManager.downloadChapters(manga, chapters.map { it.toDbChapter() })
+        downloadManager.downloadChapters(manga, chapters.map { it.toDbChapter() }, isAutoDownload = isAutoDownload)
         toggleAllSelection(false)
     }
 
@@ -702,7 +703,17 @@ class MangaPresenter(
             val manga = successState?.manga ?: return@launchNonCancellable
             val categories = getCategories.await(manga.id).map { it.id }
             if (chapters.isEmpty() || !manga.shouldDownloadNewChapters(categories, downloadPreferences)) return@launchNonCancellable
-            downloadChapters(chapters)
+            val unreadChapters = successState?.chapters?.filter {
+                !it.chapter.read && it.chapter.id !in chapters.map(DomainChapter::id)
+            }.orEmpty()
+            val downloadedUnreadChaptersCount = unreadChapters.count { it.isDownloaded }
+            val chaptersToDownload = manga.getChaptersToDownload(
+                chapters,
+                unreadChapters.isNotEmpty(),
+                downloadedUnreadChaptersCount,
+                downloadPreferences,
+            )
+            downloadChapters(chaptersToDownload, true)
         }
     }
 

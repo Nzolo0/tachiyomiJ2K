@@ -6,6 +6,7 @@ import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import eu.kanade.domain.backup.service.BackupPreferences
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.download.service.DownloadPreferences
 import eu.kanade.domain.library.service.LibraryPreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.ui.UiPreferences
@@ -50,6 +51,7 @@ object Migrations {
         libraryPreferences: LibraryPreferences,
         readerPreferences: ReaderPreferences,
         backupPreferences: BackupPreferences,
+        downloadPreferences: DownloadPreferences,
     ): Boolean {
         val lastVersionCode = preferenceStore.getInt("last_version_code", 0)
         val oldVersion = lastVersionCode.get()
@@ -337,6 +339,12 @@ object Migrations {
                         val themeMode = prefs.getString(uiPreferences.themeMode().key(), null) ?: return@edit
                         putString(uiPreferences.themeMode().key(), themeMode.uppercase())
                     }
+                }
+            }
+            if (oldVersion < 87) {
+                val downloadNew = prefs.getBoolean("download_new", false)
+                if (downloadNew) {
+                    downloadPreferences.downloadNewChapters().set(-1)
                 }
             }
             return true
