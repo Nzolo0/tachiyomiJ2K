@@ -48,6 +48,7 @@ sealed class Extension {
         val apkName: String,
         val iconUrl: String,
         val sources: List<AvailableSource>,
+        val repoUrl: String,
     ) : Extension()
 
     @Serializable

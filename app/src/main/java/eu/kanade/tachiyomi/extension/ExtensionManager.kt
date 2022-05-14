@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Parcelable
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.extension.api.ExtensionGithubApi
 import eu.kanade.tachiyomi.extension.model.Extension
@@ -15,6 +16,7 @@ import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.ui.extension.ExtensionIntallInfo
 import eu.kanade.tachiyomi.util.system.launchNow
+import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -130,10 +132,10 @@ class ExtensionManager(
         val extensions: List<Extension.Available> = try {
             api.findExtensions()
         } catch (e: Exception) {
-            Timber.e(e)
+            Timber.e(e, context.getString(R.string.extension_api_error))
+            context.toast(R.string.extension_api_error)
             emptyList()
-        }
-
+            }
         enableAdditionalSubLanguages(extensions)
 
         _availableExtensionsFlow.value = extensions
@@ -435,6 +437,7 @@ class ExtensionManager(
         val name: String,
         val versionCode: Long,
         val libVersion: Double,
+        val repoUrl: String,
     ) : Parcelable {
         constructor(extension: Extension.Available) : this(
             apkName = extension.apkName,
@@ -442,6 +445,7 @@ class ExtensionManager(
             name = extension.name,
             versionCode = extension.versionCode,
             libVersion = extension.libVersion,
+            repoUrl = extension.repoUrl,
         )
     }
 

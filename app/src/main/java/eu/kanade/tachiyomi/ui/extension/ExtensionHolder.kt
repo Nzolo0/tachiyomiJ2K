@@ -14,6 +14,7 @@ import coil.load
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.image.coil.CoverViewTarget
 import eu.kanade.tachiyomi.databinding.ExtensionCardItemBinding
+import eu.kanade.tachiyomi.extension.api.REPO_URL_PREFIX
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.model.InstalledExtensionsOrder
@@ -96,8 +97,8 @@ class ExtensionHolder(view: View, val adapter: ExtensionAdapter) :
             extension is Extension.Untrusted -> itemView.context.getString(R.string.untrusted)
             extension is Extension.Installed && extension.isUnofficial -> itemView.context.getString(R.string.unofficial)
             extension is Extension.Installed && extension.isObsolete -> itemView.context.getString(R.string.obsolete)
-            extension.isNsfw -> itemView.context.getString(R.string.nsfw_short)
-            else -> ""
+            extension.isNsfw -> itemView.context.getString(R.string.nsfw_short).plusRepo(extension)
+            else -> "".plusRepo(extension)
         }.uppercase(Locale.ROOT)
         binding.installProgress.progress = item.sessionProgress ?: 0
         binding.installProgress.isVisible = item.sessionProgress != null
@@ -113,6 +114,23 @@ class ExtensionHolder(view: View, val adapter: ExtensionAdapter) :
             binding.sourceImage.load(extension.icon)
         }
         bindButton(item)
+    }
+
+    private fun String.plusRepo(extension: Extension): String {
+        return if (extension is Extension.Available) {
+            when (extension.repoUrl) {
+                REPO_URL_PREFIX -> this
+                else -> {
+                    if (isEmpty()) {
+                        this
+                    } else {
+                        "$this • "
+                    } + itemView.context.getString(R.string.repo_source)
+                }
+            }
+        } else {
+            this
+        }
     }
 
     @Suppress("ResourceType")
