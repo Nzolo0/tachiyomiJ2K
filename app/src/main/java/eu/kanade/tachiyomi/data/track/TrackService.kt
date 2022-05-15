@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.util.system.executeOnIO
 import okhttp3.OkHttpClient
 import uy.kohesive.injekt.injectLazy
+import java.util.Date
 
 abstract class TrackService(val id: Int) {
 
@@ -72,7 +73,7 @@ abstract class TrackService(val id: Int) {
 
     open suspend fun removeFromService(track: Track): Boolean = false
 
-    open fun updateTrackStatus(
+    open suspend fun updateTrackStatus(
         track: Track,
         setToReadStatus: Boolean,
         setToComplete: Boolean = false,
@@ -80,6 +81,12 @@ abstract class TrackService(val id: Int) {
     ) {
         if (setToReadStatus && track.status == planningStatus() && track.last_chapter_read != 0f) {
             track.status = readingStatus()
+            if (track.started_reading_date <= 0L) {
+                track.started_reading_date = getStartDate(track).takeUnless { it == 0L } ?: Date().time
+            }
+        } else if (setToReadStatus && track.status == readingStatus() && track.last_chapter_read == 0f) {
+            track.status = planningStatus()
+            track.started_reading_date = -1L
         }
         if (setToComplete &&
             (!mustReadToComplete || track.status == readingStatus()) &&
