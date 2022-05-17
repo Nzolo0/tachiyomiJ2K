@@ -68,7 +68,7 @@ open class GlobalSearchPresenter(
 
     var items: List<GlobalSearchItem> = emptyList()
 
-    private val semaphore = Semaphore(5)
+    private val semaphore = Semaphore(50)
 
     override fun onCreate() {
         super.onCreate()
