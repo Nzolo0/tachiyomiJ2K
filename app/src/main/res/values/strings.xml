@@ -116,6 +116,7 @@
 
     <!-- Updates -->
     <string name="update">Update</string>
+    <string name="update_version_">Update\n%1$s</string>
     <string name="updating_">Updating %1$s</string>
     <string name="update_available">Update available</string>
     <string name="new_version_available">New version available!</string>

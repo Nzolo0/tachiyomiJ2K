@@ -29,6 +29,7 @@ sealed class Extension {
         val isObsolete: Boolean = false,
         val isShared: Boolean,
         val repoUrl: String? = null,
+        val newVersionName: String? = null,
     ) : Extension()
 
     data class Available(

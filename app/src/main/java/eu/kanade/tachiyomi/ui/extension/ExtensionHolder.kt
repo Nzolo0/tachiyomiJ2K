@@ -149,7 +149,7 @@ class ExtensionHolder(view: View, val adapter: ExtensionAdapter) :
                     isActivated = true
                     stateListAnimator = AnimatorInflater.loadStateListAnimator(context, R.animator.icon_btn_state_list_anim)
                     rippleColor = ColorStateList.valueOf(context.getColor(R.color.on_secondary_highlight))
-                    setText(R.string.update)
+                    text = context.getString(R.string.update_version_, extension.newVersionName)
                 }
                 else -> {
                     setText(R.string.settings)

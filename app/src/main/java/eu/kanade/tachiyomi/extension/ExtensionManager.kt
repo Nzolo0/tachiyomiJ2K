@@ -213,6 +213,7 @@ class ExtensionManager(
                     mutInstalledExtensions[index] = installedExt.copy(
                         hasUpdate = hasUpdate,
                         repoUrl = availableExt.repoUrl,
+                        newVersionName = availableExt.versionName,
                     )
                     hasUpdateCount++
                     changed = true
@@ -425,7 +426,7 @@ class ExtensionManager(
      * Extension method to set the update field of an installed extension.
      */
     private fun Extension.Installed.withUpdateCheck(): Extension.Installed {
-        return if (updateExists()) copy(hasUpdate = true) else this
+        return if (updateExists()) copy(hasUpdate = true, newVersionName = versionName) else this
     }
 
     private fun Extension.Installed.updateExists(availableExtension: Extension.Available? = null): Boolean {
