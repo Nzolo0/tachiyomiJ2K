@@ -3,23 +3,34 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_select_none"
-        android:icon="@drawable/ic_select_none_24dp"
-        android:title="@string/select_none"
-        app:showAsAction="ifRoom" />
-    <item
         android:id="@+id/action_select_all"
         android:icon="@drawable/ic_select_all_24dp"
         android:title="@string/select_all"
         app:showAsAction="ifRoom" />
     <item
-        android:id="@+id/action_match_enabled"
-        android:icon="@drawable/ic_browse_24dp"
-        android:title="@string/match_enabled_sources"
+        android:id="@+id/action_select_inverse"
+        android:icon="@drawable/ic_flip_to_back_24dp"
+        android:title="@string/select_inverse"
         app:showAsAction="ifRoom" />
+    <group
+        android:id="@+id/action_enabled_pinned_group"
+        android:checkableBehavior="all">
+        <item
+            android:id="@+id/action_only_enabled"
+            android:title="@string/only_enabled_sources" />
+        <item
+            android:id="@+id/action_only_pinned"
+            android:title="@string/only_pinned_sources" />
+    </group>
     <item
-        android:id="@+id/action_match_pinned"
-        android:icon="@drawable/ic_pin_24dp"
-        android:title="@string/match_pinned_sources"
-        app:showAsAction="ifRoom" />
+        android:id="@+id/action_lang"
+        android:icon="@drawable/ic_language_24dp"
+        android:title="@string/filter_languages"
+        app:showAsAction="ifRoom">
+        <menu>
+            <group
+                android:id="@+id/action_lang_group"
+                android:checkableBehavior="all" />
+        </menu>
+    </item>
 </menu>

@@ -358,6 +358,10 @@ class PreferencesHelper(val context: Context) {
 
     fun skipPreMigration() = flowPrefs.getBoolean(Keys.skipPreMigration, false)
 
+    fun onlyPinnedSources() = flowPrefs.getBoolean("match_pinned_sources", false)
+
+    fun onlyEnabledSources() = flowPrefs.getBoolean("match_enabled_sources", false)
+
     fun defaultMangaOrder() = flowPrefs.getString("default_manga_order", "")
 
     fun refreshCoversToo() = flowPrefs.getBoolean(Keys.refreshCoversToo, true)

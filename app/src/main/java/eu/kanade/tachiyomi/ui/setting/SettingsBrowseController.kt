@@ -137,50 +137,23 @@ class SettingsBrowseController : SettingsController() {
                     defaultValue = false
                 }
             }
-            preference {
-                key = "match_pinned_sources"
-                titleRes = R.string.match_pinned_sources
+            switchPreference {
+                bindTo(preferences.onlyPinnedSources())
+                titleRes = R.string.only_pinned_sources
                 summaryRes = R.string.only_enable_pinned_for_migration
-                onClick {
-                    val ogSources = preferences.migrationSources().get()
-                    val pinnedSources =
-                        preferences.pinnedCatalogues().get().joinToString("/")
-                    preferences.migrationSources().set(pinnedSources)
-                    (activity as? MainActivity)?.setUndoSnackBar(
-                        view?.snack(
-                            R.string.migration_sources_changed,
-                        ) {
-                            setAction(R.string.undo) {
-                                preferences.migrationSources().set(ogSources)
-                            }
-                        },
-                    )
+                onChange { onlyPinned ->
+                    updateMigrationSources(preferences.onlyEnabledSources().get(), onlyPinned as Boolean)
+                    true
                 }
             }
 
-            preference {
-                key = "match_enabled_sources"
-                titleRes = R.string.match_enabled_sources
+            switchPreference {
+                bindTo(preferences.onlyEnabledSources())
+                titleRes = R.string.only_enabled_sources
                 summaryRes = R.string.only_enable_enabled_for_migration
-                onClick {
-                    val ogSources = preferences.migrationSources().get()
-                    val languages = preferences.enabledLanguages().get()
-                    val hiddenCatalogues = preferences.hiddenSources().get()
-                    val enabledSources =
-                        sourceManager.getCatalogueSources().filter { it.lang in languages }
-                            .filterNot { it.id.toString() in hiddenCatalogues }
-                            .sortedBy { "(${it.lang}) ${it.name}" }
-                            .joinToString("/") { it.id.toString() }
-                    preferences.migrationSources().set(enabledSources)
-                    (activity as? MainActivity)?.setUndoSnackBar(
-                        view?.snack(
-                            R.string.migration_sources_changed,
-                        ) {
-                            setAction(R.string.undo) {
-                                preferences.migrationSources().set(ogSources)
-                            }
-                        },
-                    )
+                onChange { onlyEnabled ->
+                    updateMigrationSources(onlyEnabled as Boolean, preferences.onlyPinnedSources().get())
+                    true
                 }
             }
 
@@ -200,8 +173,28 @@ class SettingsBrowseController : SettingsController() {
         }
     }
 
+    private fun updateMigrationSources(onlyEnabled: Boolean, onlyPinned: Boolean) {
+        val ogSources = preferences.migrationSources().get()
+        val languages = preferences.enabledLanguages().get()
+        val hiddenCatalogues = preferences.hiddenSources().get().mapNotNull { it.toLongOrNull() }
+        val pinnedCatalogues = preferences.pinnedCatalogues().get().mapNotNull { it.toLongOrNull() }
+
+        val enabledSources = sourceManager.getCatalogueSources().filter { it.lang in languages }
+            .filter { (!onlyEnabled || it.id !in hiddenCatalogues) && (!onlyPinned || it.id in pinnedCatalogues) }
+            .sortedBy { "(${it.lang}) ${it.name}" }
+            .joinToString("/") { it.id.toString() }
+        preferences.migrationSources().set(enabledSources)
+
+        (activity as? MainActivity)?.setUndoSnackBar(
+            view?.snack(R.string.migration_sources_changed) {
+                setAction(R.string.undo) { preferences.migrationSources().set(ogSources) }
+            },
+        )
+    }
+
     override fun onActivityResumed(activity: Activity) {
         super.onActivityResumed(activity)
-        updatedExtNotifPref?.isChecked = Notifications.isNotificationChannelEnabled(activity, Notifications.CHANNEL_EXT_UPDATED)
+        updatedExtNotifPref?.isChecked =
+            Notifications.isNotificationChannelEnabled(activity, Notifications.CHANNEL_EXT_UPDATED)
     }
 }

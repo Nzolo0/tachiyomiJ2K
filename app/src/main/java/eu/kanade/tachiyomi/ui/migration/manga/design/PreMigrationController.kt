@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
+import androidx.core.view.forEach
 import androidx.core.view.marginBottom
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePaddingRelative
@@ -26,6 +27,7 @@ import eu.kanade.tachiyomi.ui.base.SmallToolbarInterface
 import eu.kanade.tachiyomi.ui.base.controller.BaseController
 import eu.kanade.tachiyomi.ui.migration.manga.process.MigrationListController
 import eu.kanade.tachiyomi.ui.migration.manga.process.MigrationProcedureConfig
+import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.view.doOnApplyWindowInsetsCompat
 import eu.kanade.tachiyomi.util.view.expand
 import eu.kanade.tachiyomi.util.view.liftAppbarWith
@@ -48,6 +50,12 @@ class PreMigrationController(bundle: Bundle? = null) :
 
     private var dialog: BottomSheetDialog? = null
 
+    private var onlyEnabledSources = prefs.onlyEnabledSources().get()
+    private var onlyPinnedSources = prefs.onlyPinnedSources().get()
+    private val hiddenSources = prefs.hiddenSources().get().mapNotNull { it.toLongOrNull() }
+    private val pinnedSources = prefs.pinnedCatalogues().get().mapNotNull { it.toLongOrNull() }
+    private var enabledLanguages = prefs.enabledLanguages().get().minus("all").toMutableSet()
+
     override fun getTitle() = view?.context?.getString(R.string.select_sources)
 
     override fun createBinding(inflater: LayoutInflater) = PreMigrationControllerBinding.inflate(inflater)
@@ -56,7 +64,7 @@ class PreMigrationController(bundle: Bundle? = null) :
         liftAppbarWith(binding.recycler)
 
         val ourAdapter = adapter ?: MigrationSourceAdapter(
-            getEnabledSources().map { MigrationSourceItem(it, isEnabled(it.id.toString())) },
+            getEnabledSources().map { MigrationSourceItem(it, isEnabled(it.id)) },
             this,
         )
         adapter = ourAdapter
@@ -98,10 +106,10 @@ class PreMigrationController(bundle: Bundle? = null) :
     }
 
     override fun startMigration(extraParam: String?) {
-        val listOfSources = adapter?.items?.filter {
-            it.sourceEnabled
-        }?.joinToString("/") { it.source.id.toString() } ?: ""
-        prefs.migrationSources().set(listOfSources)
+        val enabledSources = adapter?.items?.filter { it.sourceEnabled } ?: emptyList()
+        prefs.migrationSources().set(enabledSources.joinToString("/") { it.source.id.toString() })
+        prefs.onlyEnabledSources().set(onlyEnabledSources && enabledSources.none { it.source.id in hiddenSources })
+        prefs.onlyPinnedSources().set(onlyPinnedSources && enabledSources.none { it.source.id !in pinnedSources })
 
         router.replaceTopController(
             MigrationListController.create(
@@ -138,66 +146,133 @@ class PreMigrationController(bundle: Bundle? = null) :
      * @return list containing enabled sources.
      */
     private fun getEnabledSources(): List<HttpSource> {
-        val languages = prefs.enabledLanguages().get()
         val sourcesSaved = prefs.migrationSources().get().split("/")
-        var sources = sourceManager.getCatalogueSources()
+        val sources = sourceManager.getCatalogueSources()
             .filterIsInstance<HttpSource>()
-            .filter { it.lang in languages }
+            .filter { it.lang in enabledLanguages }
             .sortedBy { "(${it.lang}) ${it.name}" }
-        sources =
-            sources.filter { isEnabled(it.id.toString()) }.sortedBy {
-            sourcesSaved.indexOf(
-                it.id
-                    .toString(),
-            )
-        } +
-            sources.filterNot { isEnabled(it.id.toString()) }
 
-        return sources
+        return sources.filter { isEnabled(it.id) }
+            .sortedBy { sourcesSaved.indexOf(it.id.toString()) } +
+            sources.filterNot { isEnabled(it.id) }
     }
 
-    fun isEnabled(id: String): Boolean {
+    fun isEnabled(id: Long): Boolean {
         val sourcesSaved = prefs.migrationSources().get()
-        val hiddenCatalogues = prefs.hiddenSources().get()
         return if (sourcesSaved.isEmpty()) {
-            id !in hiddenCatalogues
+            id !in hiddenSources
         } else {
-            sourcesSaved.split("/").contains(id)
+            sourcesSaved.split("/").contains(id.toString())
         }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.pre_migration, menu)
+        val langItem = menu.findItem(R.id.action_lang)
+        val subMenu = langItem.subMenu
+        langItem.isVisible = enabledLanguages.size > 1
+        enabledLanguages.forEachIndexed { index, lang ->
+            subMenu?.add(
+                R.id.action_lang_group,
+                index,
+                Menu.NONE,
+                LocaleHelper.getSourceDisplayName(lang, prefs.context),
+            )?.titleCondensed = lang
+        }
+
+        langItem.setOnMenuItemClickListener {
+            onPrepareOptionsMenu(menu)
+            true
+        }
+        subMenu?.setGroupCheckable(R.id.action_lang_group, true, false)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        super.onPrepareOptionsMenu(menu)
+
+        val enabledItems = adapter?.currentItems?.filter { it.sourceEnabled } ?: return
+        val langItem = menu.findItem(R.id.action_lang)
+        langItem.subMenu?.forEach { item ->
+            item.isChecked = enabledItems.any { it.source.lang == item.titleCondensed }
+            enabledLanguages.apply {
+                if (item.isChecked) add(item.titleCondensed.toString()) else remove(item.titleCondensed)
+            }
+        }
+        menu.findItem(R.id.action_only_enabled).isChecked =
+            onlyEnabledSources && enabledItems.none { it.source.id in hiddenSources }
+        menu.findItem(R.id.action_only_pinned).isChecked =
+            onlyPinnedSources && enabledItems.none { it.source.id !in pinnedSources }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.action_select_all, R.id.action_select_none -> {
-                adapter?.currentItems?.forEach {
-                    it.sourceEnabled = item.itemId == R.id.action_select_all
+            R.id.action_select_all -> {
+                val items = adapter?.currentItems?.apply {
+                    val shouldSelect = any { !it.sourceEnabled }
+                    forEach { it.sourceEnabled = shouldSelect }
                 }
-                adapter?.notifyDataSetChanged()
+                items.updateDataSetForSelect()
             }
-            R.id.action_match_enabled, R.id.action_match_pinned -> {
-                val enabledSources = if (item.itemId == R.id.action_match_enabled) {
-                    prefs.hiddenSources().get().mapNotNull { it.toLongOrNull() }
+            R.id.action_select_inverse -> {
+                val items = adapter?.currentItems?.onEach { it.sourceEnabled = !it.sourceEnabled }
+                items.updateDataSetForSelect()
+            }
+            R.id.action_only_enabled, R.id.action_only_pinned -> {
+                item.isChecked = !item.isChecked
+                if (item.itemId == R.id.action_only_enabled) {
+                    onlyEnabledSources = item.isChecked
                 } else {
-                    prefs.pinnedCatalogues().get().mapNotNull { it.toLongOrNull() }
+                    onlyPinnedSources = item.isChecked
                 }
-                val items = adapter?.currentItems?.toList() ?: return true
-                items.forEach {
-                    it.sourceEnabled = if (item.itemId == R.id.action_match_enabled) {
-                        it.source.id !in enabledSources
-                    } else {
-                        it.source.id in enabledSources
-                    }
-                }
-                val sortedItems = items.sortedBy { it.source.name }.sortedBy { !it.sourceEnabled }
-                adapter?.updateDataSet(sortedItems)
+                return item.updateEnabledSources(true)
             }
-            else -> return super.onOptionsItemSelected(item)
+            else -> return when (item.groupId) {
+                R.id.action_lang_group -> {
+                    item.isChecked = !item.isChecked
+                    enabledLanguages.apply {
+                        if (item.isChecked) add(item.titleCondensed.toString()) else remove(item.titleCondensed)
+                    }
+                    item.updateEnabledSources()
+                }
+                else -> super.onOptionsItemSelected(item)
+            }
         }
         return true
+    }
+
+    private fun List<MigrationSourceItem>?.updateDataSetForSelect() {
+        onlyEnabledSources = false
+        onlyPinnedSources = false
+        val sortedItems = this?.sortedBy { it.source.name }?.sortedBy { !it.sourceEnabled }
+        adapter?.updateDataSet(sortedItems)
+    }
+
+    private fun MenuItem.updateEnabledSources(enabledOrPinned: Boolean = false): Boolean {
+        val items = adapter?.currentItems?.toList() ?: return true
+        items.forEach {
+            if (it.source.lang == titleCondensed || enabledOrPinned) {
+                val isCheckLanguage = it.source.lang in enabledLanguages
+                val isCheckEnabled = !onlyEnabledSources || it.source.id !in hiddenSources
+                val isCheckPinned = !onlyPinnedSources || it.source.id in pinnedSources
+                it.sourceEnabled = isCheckLanguage && isCheckEnabled && isCheckPinned
+            }
+        }
+        val sortedItems = items.sortedBy { it.source.name }.sortedBy { !it.sourceEnabled }
+
+        adapter?.updateDataSet(sortedItems)
+        return fixCollapsedMenu()
+    }
+
+    private fun MenuItem.fixCollapsedMenu(): Boolean {
+        setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW)
+        actionView = View(prefs.context)
+        setOnActionExpandListener(
+            object : MenuItem.OnActionExpandListener {
+                override fun onMenuItemActionExpand(item: MenuItem): Boolean = false
+                override fun onMenuItemActionCollapse(item: MenuItem): Boolean = false
+            },
+        )
+        return false
     }
 
     companion object {
