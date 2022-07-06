@@ -92,6 +92,7 @@ import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.addOrRemoveToFavorites
 import eu.kanade.tachiyomi.util.chapter.updateTrackChapterMarkedAsRead
 import eu.kanade.tachiyomi.util.isLocal
+import eu.kanade.tachiyomi.util.lang.toNormalized
 import eu.kanade.tachiyomi.util.moveCategories
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.addCheckBoxPrompt
@@ -1522,7 +1523,7 @@ class MangaDetailsController :
 
     fun globalSearch(text: String) {
         if (isNotOnline()) return
-        router.pushController(GlobalSearchController(text).withFadeTransaction())
+        router.pushController(GlobalSearchController(text.toNormalized()).withFadeTransaction())
     }
 
     override fun showFloatingActionMode(view: TextView, content: String?, isTag: Boolean) {

@@ -98,11 +98,14 @@ suspend fun updateTrackChapterRead(
         val service = trackManager.getService(track.sync_id)
         if (service != null && service.isLogged) {
             val shouldCustomCount = listOf(
-                abs(track.last_chapter_read - oldChapterRead), oldChapterRead, track.last_chapter_read,
-            ).all { it > 15 }
+                abs(track.last_chapter_read - oldChapterRead),
+                track.last_chapter_read,
+            ).all { it > 15f } && oldChapterRead != 0f
             val newCountChapter = if (shouldCustomCount) {
                 (track.last_chapter_read + (newChapterRead - oldChapterRead)).coerceAtLeast(0f)
-            } else newChapterRead
+            } else {
+                newChapterRead
+            }
             if (retryWhenOnline && !preferences.context.isOnline()) {
                 delayTrackingUpdate(preferences, mangaId, newCountChapter, track)
             } else if (preferences.context.isOnline()) {
