@@ -31,10 +31,13 @@ class BackupFileValidator(
             throw IllegalStateException(context.getString(R.string.backup_has_no_manga))
         }
 
-        val sources = backup.backupSources.map { it.sourceId to it.name }.toMap()
+        val sources = backup.backupSources.associate { it.sourceId to it.name }
         val missingSources = sources
             .filter { sourceManager.get(it.key) == null }
-            .map { sourceManager.getOrStub(it.key).name }
+            .map {
+                val sourceName = sourceManager.getOrStub(it.key).name
+                if (sourceName == it.key.toString()) it.value else sourceName
+            }
             .sorted()
 
         val trackers = backup.backupManga
