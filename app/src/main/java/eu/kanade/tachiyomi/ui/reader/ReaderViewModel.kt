@@ -477,17 +477,17 @@ class ReaderViewModel(
         val currentChapters = state.value.viewerChapters ?: return
 
         val selectedChapter = page.chapter
+        val pages = selectedChapter.pages ?: return
 
         // Save last page read and mark as read if needed
         selectedChapter.chapter.last_page_read = page.index
-        selectedChapter.chapter.pages_left =
-            (selectedChapter.pages?.size ?: page.index) - page.index
+        selectedChapter.chapter.pages_left = pages.size - page.index
         val shouldTrack = !preferences.incognitoMode().get() || hasTrackers
         if (shouldTrack &&
             // For double pages, check if the second to last page is doubled up
             (
-                (selectedChapter.pages?.lastIndex == page.index && page.firstHalf != true) ||
-                    (hasExtraPage && selectedChapter.pages?.lastIndex?.minus(1) == page.index)
+                (pages.lastIndex == page.index && page.firstHalf != true) ||
+                    (hasExtraPage && pages.lastIndex.minus(1) == page.index)
                 )
         ) {
             val chapterSort = ChapterSort(manga!!, chapterFilter, preferences)
@@ -505,7 +505,6 @@ class ReaderViewModel(
             setReadStartTime()
             scope.launch { loadNewChapter(selectedChapter) }
         }
-        val pages = page.chapter.pages ?: return
         val inDownloadRange = page.number.toDouble() / pages.size > 0.2
         if (inDownloadRange) {
             downloadNextChapters()
