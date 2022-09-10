@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.recents
 
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
+import eu.kanade.tachiyomi.data.database.models.Category
 import eu.kanade.tachiyomi.data.database.models.Chapter
 import eu.kanade.tachiyomi.data.database.models.ChapterHistory
 import eu.kanade.tachiyomi.data.database.models.History
@@ -276,6 +277,9 @@ class RecentsPresenter(
         }
 
         if (query != oldQuery) return
+        val hideCategories = preferences.hideCategories().get()
+        val includedCategories = preferences.libraryCategoriesVisibility().get().map(String::toInt)
+        val excludedCategories = preferences.libraryCategoriesVisibilityExclude().get().map(String::toInt)
         val mangaList = cReading.distinctBy {
             if (query.isEmpty() && viewType.isAll) it.manga.id else it.chapter.id
         }.filter { mch ->
@@ -288,6 +292,12 @@ class RecentsPresenter(
             } else {
                 true
             }
+        }.filter {
+            if (!hideCategories) return@filter true
+            val mangaCategories = db.getCategoriesForManga(it.manga).executeAsBlocking()
+                .ifEmpty { listOf(Category.createDefault(preferences.context)) }
+            mangaCategories.none { category -> category.id in excludedCategories } &&
+                (includedCategories.isEmpty() || mangaCategories.any { category -> category.id in includedCategories })
         }
         val pairs: List<Pair<MangaChapterHistory, Chapter>> = mangaList.mapNotNull {
             val chapter: Chapter? = when {

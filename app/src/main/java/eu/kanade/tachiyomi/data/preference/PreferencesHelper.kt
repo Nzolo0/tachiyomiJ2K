@@ -263,6 +263,10 @@ class PreferencesHelper(val context: Context) {
     fun libraryUpdateCategories() = flowPrefs.getStringSet("library_update_categories", emptySet())
     fun libraryUpdateCategoriesExclude() = flowPrefs.getStringSet("library_update_categories_exclude", emptySet())
 
+    fun hideCategories() = flowPrefs.getBoolean("hide_categories", false)
+    fun libraryCategoriesVisibility() = flowPrefs.getStringSet("library_categories_visibility", emptySet())
+    fun libraryCategoriesVisibilityExclude() = flowPrefs.getStringSet("library_categories_visibility_exclude", emptySet())
+
     fun libraryLayout() = flowPrefs.getInt(Keys.libraryLayout, LibraryItem.LAYOUT_COMFORTABLE_GRID)
 
     fun gridSize() = flowPrefs.getFloat(Keys.gridSize, 1f)

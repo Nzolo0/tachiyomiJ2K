@@ -187,6 +187,25 @@ class SettingsLibraryController : SettingsController() {
                 summaryRes = R.string.auto_refresh_covers_summary
                 defaultValue = true
             }
+
+            switchPreference {
+                bindTo(preferences.hideCategories())
+                titleRes = R.string.hide_chosen_categories
+            }
+
+            triStateListPreference(activity) {
+                preferences.apply {
+                    bindTo(libraryCategoriesVisibility(), libraryCategoriesVisibilityExclude())
+                }
+                titleRes = R.string.library_categories_visibility
+
+                val categories = listOf(Category.createDefault(context)) + dbCategories
+                entries = categories.map { it.name }
+                entryValues = categories.map { it.id.toString() }
+                allSelectionRes = R.string.all
+
+                preferences.hideCategories().asImmediateFlowIn(viewScope) { isVisible = it }
+            }
         }
     }
 }
