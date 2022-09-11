@@ -48,7 +48,7 @@
         app:layout_constraintEnd_toStartOf="@id/checkbox"
         app:layout_constraintTop_toBottomOf="@id/title"
         app:layout_constraintBottom_toBottomOf="parent"
-        tools:text="999 non-library manga in database" />
+        tools:text="999 non-library manga in database (2)" />
 
     <CheckBox
         android:id="@+id/checkbox"

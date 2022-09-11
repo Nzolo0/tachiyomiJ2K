@@ -314,11 +314,12 @@ fun getSourceIdsWithNonLibraryMangaQuery() =
 /**
  * Query to get manga that are not in library, but have read chapters
  */
-fun getReadMangaNotInLibraryQuery() =
+fun getReadMangaNotInLibraryQuery(sourceId: Long? = null) =
     """
     SELECT ${Manga.TABLE}.* 
     FROM ${Manga.TABLE} 
     WHERE ${Manga.COL_FAVORITE} = 0 AND ${Manga.COL_ID} IN(
         SELECT ${Chapter.TABLE}.${Chapter.COL_MANGA_ID} FROM ${Chapter.TABLE} WHERE ${Chapter.COL_READ} = 1 OR ${Chapter.COL_LAST_PAGE_READ} != 0
-    )
+    ) AND ($sourceId IS NULL OR ${Manga.COL_SOURCE} = $sourceId)
+    ORDER BY ${Manga.COL_TITLE}
 """

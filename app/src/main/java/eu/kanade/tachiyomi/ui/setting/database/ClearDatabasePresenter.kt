@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.setting.database
 
+import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.ui.base.presenter.BaseCoroutinePresenter
@@ -13,6 +14,7 @@ class ClearDatabasePresenter : BaseCoroutinePresenter<ClearDatabaseController>()
     private val db = Injekt.get<DatabaseHelper>()
 
     private val sourceManager = Injekt.get<SourceManager>()
+    private val coverCache = Injekt.get<CoverCache>()
 
     var sortBy = SortSources.ALPHA
         private set
@@ -33,6 +35,10 @@ class ClearDatabasePresenter : BaseCoroutinePresenter<ClearDatabaseController>()
         if (keepReadManga) {
             db.deleteMangasNotInLibraryAndNotReadBySourceIds(sources).executeAsBlocking()
         } else {
+            sources.forEach {
+                val readManga = db.getReadNotInLibraryMangasPerSource(it).executeAsBlocking()
+                readManga.forEach { manga -> coverCache.deleteFromCache(manga) }
+            }
             db.deleteMangasNotInLibraryBySourceIds(sources).executeAsBlocking()
         }
         db.deleteHistoryNoLastRead().executeAsBlocking()
@@ -51,7 +57,8 @@ class ClearDatabasePresenter : BaseCoroutinePresenter<ClearDatabaseController>()
                 .map {
                     val sourceObj = sourceManager.getOrStub(it.source)
                     hasStubSources = sourceObj is SourceManager.StubSource || hasStubSources
-                    ClearDatabaseSourceItem(sourceObj, it.count)
+                    val readManga = db.getReadNotInLibraryMangasPerSource(sourceObj.id).executeAsBlocking()
+                    ClearDatabaseSourceItem(sourceObj, it.count, readManga.count())
                 }
                 .sortedWith(
                     compareBy(

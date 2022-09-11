@@ -737,7 +737,8 @@ class MangaDetailsPresenter(
 
     fun confirmDeletion() {
         launchIO {
-            coverCache.deleteFromCache(manga)
+            val noneRead = chapters.none { it.read }
+            if (noneRead) coverCache.deleteFromCache(manga)
             customMangaManager.saveMangaInfo(CustomMangaManager.MangaJson(manga.id!!))
             downloadManager.deleteManga(manga, source)
             asyncUpdateMangaAndChapters(true)

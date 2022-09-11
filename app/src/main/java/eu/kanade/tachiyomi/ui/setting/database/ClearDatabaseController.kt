@@ -29,12 +29,14 @@ import eu.kanade.tachiyomi.util.view.activityBinding
 import eu.kanade.tachiyomi.util.view.fullAppBarHeight
 import eu.kanade.tachiyomi.util.view.scrollViewWith
 import eu.kanade.tachiyomi.util.view.snack
+import eu.kanade.tachiyomi.util.view.withFadeTransaction
 import kotlin.math.max
 import kotlin.math.roundToInt
 
 class ClearDatabaseController :
     BaseCoroutineController<ClearDatabaseControllerBinding, ClearDatabasePresenter>(),
     FlexibleAdapter.OnItemClickListener,
+    FlexibleAdapter.OnItemLongClickListener,
     FlexibleAdapter.OnUpdateListener {
 
     private var adapter: FlexibleAdapter<ClearDatabaseSourceItem>? = null
@@ -204,6 +206,13 @@ class ClearDatabaseController :
         adapter.notifyItemChanged(position, Payload.SELECTION)
         updateFab()
         return true
+    }
+
+    override fun onItemLongClick(position: Int) {
+        val item = adapter?.getItem(position) ?: return
+        if (item.readMangaCount > 0) {
+            router.pushController(BrowseClearSourceController(item.source).withFadeTransaction())
+        }
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {

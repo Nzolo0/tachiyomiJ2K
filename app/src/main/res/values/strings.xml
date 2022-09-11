@@ -872,6 +872,8 @@
     <string name="clear_db_exclude_read">Keep entries with read chapters</string>
     <string name="clear_database_completed">Entries deleted</string>
     <string name="database_clean">Database clean</string>
+    <string name="clear_title_data">Clear title data</string>
+    <string name="clear_title_data_confirmation">Do you wish to clear the title data or %1$s?</string>
     <string name="refresh_library_metadata">Refresh library metadata</string>
     <string name="updates_covers_genres_desc">Updates covers, genres, description and entries status information</string>
     <string name="refresh_tracking_metadata">Refresh tracking metadata</string>
