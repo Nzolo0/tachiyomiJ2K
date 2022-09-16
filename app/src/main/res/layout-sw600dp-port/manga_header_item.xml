@@ -211,6 +211,19 @@
                 android:tooltipText="@string/open_in_webview" />
 
             <ImageView
+                android:id="@+id/similar_button"
+                style="@style/Theme.Widget.CustomImageButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
+                android:contentDescription="@string/similar"
+                android:padding="5dp"
+                android:src="@drawable/ic_baseline_transform_24dp"
+                android:tooltipText="@string/similar" />
+
+            <ImageView
                 android:id="@+id/share_button"
                 style="@style/Theme.Widget.CustomImageButton"
                 android:layout_width="wrap_content"

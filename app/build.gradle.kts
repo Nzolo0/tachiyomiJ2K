@@ -8,6 +8,7 @@ plugins {
     id(Plugins.kotlinParcelize)
     id(Plugins.kotlinSerialization)
     id("com.google.android.gms.oss-licenses-plugin")
+    id("com.mikepenz.aboutlibraries.plugin")
     id(Plugins.googleServices) apply false
     id("com.google.firebase.crashlytics")
 }
@@ -296,6 +297,7 @@ dependencies {
     val coroutines = "1.7.3"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines")
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
 
     // Text distance
     implementation("info.debatty:java-string-similarity:2.0.0")
@@ -307,6 +309,32 @@ dependencies {
 
     // Android Chart
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    // -- MANGA RECOMMENDATION
+    // Sandwich
+    implementation("com.github.skydoves:sandwich:1.2.7")
+
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
+
+    // PastelPlaceholders
+    implementation("com.github.zedlabs:pastelPlaceholders:1.0.4")
+
+    //Compose
+    implementation(compose.bundles.compose)
+    implementation(compose.gap)
+    implementation(compose.bundles.accompanist)
+    implementation(compose.number.picker)
+    implementation("io.coil-kt:coil-compose:$coilVersion")
+    val iconicsVersion = "5.4.0"
+    implementation("com.mikepenz:iconics-core:$iconicsVersion")
+    implementation("com.mikepenz:iconics-views:$iconicsVersion")
+    implementation("com.mikepenz:iconics-compose:$iconicsVersion")
+    implementation("com.mikepenz:aboutlibraries-compose:10.5.1")
+    //required outside bundle cause toml doesnt work with aar
+    implementation("com.mikepenz:community-material-typeface:7.0.96.0-kotlin@aar")
+    implementation("com.mikepenz:material-design-icons-dx-typeface:5.0.1.2-kotlin@aar")
+    implementation("com.mikepenz:google-material-typeface-outlined:4.0.0.1-kotlin@aar")
+    // --
 }
 
 tasks {
@@ -320,6 +348,7 @@ tasks {
             "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
             "-opt-in=androidx.compose.material.ExperimentalMaterialApi",
             "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi",
             "-opt-in=androidx.compose.material.ExperimentalMaterialApi",
             "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
             "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
@@ -327,7 +356,9 @@ tasks {
             "-opt-in=androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi",
             "-opt-in=coil.annotation.ExperimentalCoilApi",
             "-opt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
-            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "-opt-in=kotlin.time.ExperimentalTime",
+            "-opt-in=kotlinx.coroutines.DelicateCoroutinesApi",
+            "-opt-in=kotlin.ExperimentalStdlibApi",
             "-opt-in=kotlinx.coroutines.FlowPreview",
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
             "-opt-in=kotlinx.coroutines.InternalCoroutinesApi",

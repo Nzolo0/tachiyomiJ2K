@@ -13,6 +13,8 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Category
 import eu.kanade.tachiyomi.data.database.models.Manga
+import eu.kanade.tachiyomi.data.database.models.Manga.DisplayManga
+import eu.kanade.tachiyomi.data.database.models.Manga.SourceManga
 import eu.kanade.tachiyomi.data.database.models.MangaCategory
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.EnhancedTrackService
@@ -28,6 +30,7 @@ import eu.kanade.tachiyomi.ui.migration.MigrationFlags
 import eu.kanade.tachiyomi.ui.migration.manga.process.MigrationProcessAdapter
 import eu.kanade.tachiyomi.util.chapter.syncChaptersWithTrackServiceTwoWay
 import eu.kanade.tachiyomi.util.lang.asButton
+import eu.kanade.tachiyomi.util.lang.capitalizeWords
 import eu.kanade.tachiyomi.util.system.isConnectedToWifi
 import eu.kanade.tachiyomi.util.system.launchIO
 import eu.kanade.tachiyomi.util.system.materialAlertDialog
@@ -419,6 +422,45 @@ fun Manga.autoAddTrack(db: DatabaseHelper, onMangaMoved: () -> Unit) {
                 }
             }
         }
+}
+
+fun SourceManga.toDisplayManga(db: DatabaseHelper, sourceId: Long): DisplayManga {
+    var localManga = db.getManga(this.url, sourceId).executeAsBlocking()
+    if (localManga == null) {
+        val newManga = Manga.create(this.url, this.title, sourceId)
+        newManga.apply {
+            this.thumbnail_url = currentThumbnail
+        }
+        val result = db.insertManga(newManga).executeAsBlocking()
+        newManga.id = result.insertedId()
+        localManga = newManga
+    } else if (localManga.title.isBlank()) {
+        localManga.title = this.title
+        db.insertManga(localManga).executeAsBlocking()
+    }
+    return localManga.toDisplayManga(this.displayText)
+}
+
+fun Manga.toDisplayManga(displayText: String = ""): DisplayManga {
+    return DisplayManga(
+        mangaId = this.id!!,
+        url = this.url,
+        title = this.title,
+        inLibrary = this.favorite,
+        displayText = displayText.replace("_", " ").capitalizeWords(),
+        thumbnail_url = this.thumbnail_url!!,
+        sourceId = this.source,
+    )
+}
+
+fun DisplayManga.toManga(): Manga {
+    return Manga.create(this.sourceId).apply {
+        id = this@toManga.mangaId
+        url = this@toManga.url
+        title = this@toManga.title
+        favorite = this@toManga.inLibrary
+        thumbnail_url = this@toManga.thumbnail_url
+    }
 }
 
 fun Context.mapStatus(status: Int): String {

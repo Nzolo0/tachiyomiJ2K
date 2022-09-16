@@ -133,6 +133,7 @@ class MangaDetailsAdapter(
         fun accentColor(): Int?
         fun mangaPresenter(): MangaDetailsPresenter
         fun prepareToShareManga()
+        fun openSimilarManga()
         fun openInWebView()
         fun startDownloadRange(position: Int)
         fun readNextChapter(readingButton: View)

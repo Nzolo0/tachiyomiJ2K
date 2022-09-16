@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.database.models
 
 import android.content.Context
+import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
@@ -339,4 +340,17 @@ interface Manga : SManga {
             this.source = source
         }
     }
+
+    data class SourceManga(val currentThumbnail: String, val url: String, val title: String, val displayText: String = "", @StringRes val displayTextRes: Int? = null)
+
+    data class DisplayManga(
+        val mangaId: Long,
+        val inLibrary: Boolean,
+        val thumbnail_url: String? = "",
+        val url: String,
+        val title: String,
+        val displayText: String = "",
+        @StringRes val displayTextRes: Int? = null,
+        val sourceId: Long,
+    )
 }

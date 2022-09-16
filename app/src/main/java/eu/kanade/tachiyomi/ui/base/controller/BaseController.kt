@@ -109,6 +109,14 @@ abstract class BaseController<VB : ViewBinding>(bundle: Bundle? = null) :
         removeQueryListener(false)
     }
 
+    fun hideToolbar() {
+        (activity as? AppCompatActivity)?.findViewById<View>(R.id.app_bar)?.isVisible = false
+    }
+
+    fun showToolbar() {
+        (activity as? AppCompatActivity)?.findViewById<View>(R.id.app_bar)?.isVisible = true
+    }
+
     fun setTitle() {
         var parentController = parentController
         while (parentController != null) {

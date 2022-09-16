@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.data.database.tables.ChapterTable
 import eu.kanade.tachiyomi.data.database.tables.HistoryTable
 import eu.kanade.tachiyomi.data.database.tables.MangaCategoryTable
 import eu.kanade.tachiyomi.data.database.tables.MangaTable
+import eu.kanade.tachiyomi.data.database.tables.SimilarTable
 import eu.kanade.tachiyomi.data.database.tables.TrackTable
 
 class DbOpenCallback : SupportSQLiteOpenHelper.Callback(DATABASE_VERSION) {
@@ -43,6 +44,7 @@ class DbOpenCallback : SupportSQLiteOpenHelper.Callback(DATABASE_VERSION) {
         execSQL(CategoryTable.createTableQuery)
         execSQL(MangaCategoryTable.createTableQuery)
         execSQL(HistoryTable.createTableQuery)
+        execSQL(SimilarTable.createTableQuery)
 
         // DB indexes
         execSQL(MangaTable.createUrlIndexQuery)
@@ -110,6 +112,10 @@ class DbOpenCallback : SupportSQLiteOpenHelper.Callback(DATABASE_VERSION) {
             db.execSQL(TrackTable.dropTempTable)
         }
         if (oldVersion < 16) {
+            db.execSQL(SimilarTable.createTableQuery)
+            db.execSQL(SimilarTable.createMangaIdIndexQuery)
+        }
+        if (oldVersion < 17) {
             db.execSQL(MangaTable.addUpdateStrategy)
         }
         if (oldVersion < 17) {

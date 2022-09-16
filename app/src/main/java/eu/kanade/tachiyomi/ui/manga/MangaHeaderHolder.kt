@@ -29,8 +29,10 @@ import coil.request.CachePolicy
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.image.coil.loadManga
+import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.databinding.ChapterHeaderItemBinding
 import eu.kanade.tachiyomi.databinding.MangaHeaderItemBinding
 import eu.kanade.tachiyomi.source.SourceManager
@@ -42,6 +44,7 @@ import eu.kanade.tachiyomi.util.system.getResourceColor
 import eu.kanade.tachiyomi.util.system.isInNightMode
 import eu.kanade.tachiyomi.util.system.isLTR
 import eu.kanade.tachiyomi.util.view.resetStrokeColor
+import uy.kohesive.injekt.injectLazy
 
 @SuppressLint("ClickableViewAccessibility")
 class MangaHeaderHolder(
@@ -61,6 +64,9 @@ class MangaHeaderHolder(
     } catch (e: Exception) {
         null
     }
+
+    val sourceManager: SourceManager by injectLazy()
+    val db: DatabaseHelper by injectLazy()
 
     private var showReadingButton = true
     private var showMoreButton = true
@@ -124,6 +130,7 @@ class MangaHeaderHolder(
             }
 
             webviewButton.setOnClickListener { adapter.delegate.openInWebView() }
+            similarButton.setOnClickListener { adapter.delegate.openSimilarManga() }
             shareButton.setOnClickListener { adapter.delegate.prepareToShareManga() }
             favoriteButton.setOnClickListener {
                 adapter.delegate.favoriteManga(false)
@@ -380,6 +387,10 @@ class MangaHeaderHolder(
             checked(tracked)
         }
 
+        val hasMangaDex = sourceManager.getCatalogueSources().any { it.name == "MangaDex" }
+        binding.similarButton.isVisible = hasMangaDex && db.getTracks(manga).executeAsBlocking()
+            .any { it.sync_id in listOf(TrackManager.MANGA_UPDATES, TrackManager.ANILIST, TrackManager.MYANIMELIST) }
+
         with(binding.startReadingButton) {
             val nextChapter = presenter.getNextUnreadChapter()
             isVisible = presenter.chapters.isNotEmpty() && !item.isLocked && !adapter.hasFilter()
@@ -589,6 +600,7 @@ class MangaHeaderHolder(
             TextViewCompat.setCompoundDrawableTintList(lessButton, ColorStateList.valueOf(accentColor))
             lessButton.setTextColor(accentColor)
             shareButton.imageTintList = ColorStateList.valueOf(accentColor)
+            similarButton.imageTintList = ColorStateList.valueOf(accentColor)
             webviewButton.imageTintList = ColorStateList.valueOf(accentColor)
             filterButton.imageTintList = ColorStateList.valueOf(accentColor)
 

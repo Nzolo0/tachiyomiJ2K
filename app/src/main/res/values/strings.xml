@@ -87,6 +87,7 @@
     <string name="adding_category_to_queue">Adding %1$s to update queue</string>
     <string name="_already_in_queue">%1$s is already in queue</string>
     <string name="create_new_category">Create new category</string>
+    <string name="plus_new_category">+ New category</string>
     <string name="new_category">New category</string>
     <string name="category_is_empty">Category is empty</string>
     <string name="show_categories_while_filtering">Show empty categories while filtering</string>
@@ -188,6 +189,7 @@
     <string name="show_unread_count">Show unread count</string>
     <string name="tap_library_to_show_filters">Tap the Library icon to show filters</string>
     <string name="display_as">Display as</string>
+    <string name="display_as_">Display as %1$s</string>
     <string name="hide_category_hopper">Hide category hopper</string>
     <string name="more_library_settings">More library settings</string>
     <string name="shift_one_page_over">Shift one page over</string>
@@ -1059,6 +1061,15 @@
     <plurals name="_languages">
         <item quantity="other">%d languages</item>
     </plurals>
+
+    <!-- Similar -->
+    <string name="similar_type">Similar</string>
+    <string name="related_type">Related</string>
+    <string name="similar">Similar Manga</string>
+    <string name="similar_credit_title">Similar Manga Credits</string>
+    <string name="similar_credit_message">
+        For more information and to view the source code:\n%s
+    </string>
 
     <!-- Time -->
     <string name="manual">Manual</string>

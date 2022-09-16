@@ -17,7 +17,10 @@ import eu.kanade.tachiyomi.extension.util.TrustExtension
 import eu.kanade.tachiyomi.network.JavaScriptEngine
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.SourceManager
+import eu.kanade.tachiyomi.source.online.handlers.SimilarHandler
+import eu.kanade.tachiyomi.ui.manga.similar.SimilarRepository
 import eu.kanade.tachiyomi.util.chapter.ChapterFilter
+import eu.kanade.tachiyomi.util.manga.MangaMappings
 import eu.kanade.tachiyomi.util.manga.MangaShortcutManager
 import kotlinx.serialization.json.Json
 import uy.kohesive.injekt.api.InjektModule
@@ -70,6 +73,12 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory { MangaShortcutManager() }
 
         addSingletonFactory { TrustExtension(get()) }
+
+        addSingleton(SimilarHandler())
+
+        addSingleton(SimilarRepository())
+
+        addSingletonFactory { MangaMappings(app.applicationContext) }
 
         // Asynchronously init expensive components for a faster cold start
 

@@ -1012,6 +1012,7 @@ class MangaDetailsPresenter(
                     }
                 }
                 fetchTracks()
+                controller?.updateHeader()
             }
         }
     }
@@ -1042,6 +1043,7 @@ class MangaDetailsPresenter(
                 }
             }
             fetchTracks()
+            controller?.updateHeader()
         }
     }
 
