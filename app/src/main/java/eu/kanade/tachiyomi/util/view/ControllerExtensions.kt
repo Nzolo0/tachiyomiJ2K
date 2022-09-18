@@ -66,6 +66,7 @@ import eu.kanade.tachiyomi.ui.main.FloatingSearchInterface
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.main.TabbedInterface
 import eu.kanade.tachiyomi.ui.manga.MangaDetailsController
+import eu.kanade.tachiyomi.ui.manga.stats.StatsMangaController
 import eu.kanade.tachiyomi.ui.setting.SettingsController
 import eu.kanade.tachiyomi.util.system.ImageUtil
 import eu.kanade.tachiyomi.util.system.dpToPx
@@ -445,7 +446,7 @@ fun Controller.scrollViewWith(
                             this@scrollViewWith !is FloatingSearchInterface && router.backstack.lastOrNull()
                                 ?.controller is MangaDetailsController
                             ) || includeTabView
-                        )
+                        ) && this@scrollViewWith !is StatsMangaController
                     ) {
                         val parent = recycler.parent as? ViewGroup ?: return
                         val v = View(activity)

@@ -80,6 +80,7 @@ import eu.kanade.tachiyomi.ui.manga.chapter.ChapterHolder
 import eu.kanade.tachiyomi.ui.manga.chapter.ChapterItem
 import eu.kanade.tachiyomi.ui.manga.chapter.ChaptersSortBottomSheet
 import eu.kanade.tachiyomi.ui.manga.similar.SimilarController
+import eu.kanade.tachiyomi.ui.manga.stats.StatsMangaController
 import eu.kanade.tachiyomi.ui.manga.track.TrackItem
 import eu.kanade.tachiyomi.ui.manga.track.TrackingBottomSheet
 import eu.kanade.tachiyomi.ui.migration.manga.design.PreMigrationController
@@ -1249,6 +1250,13 @@ class MangaDetailsController :
         } catch (e: Exception) {
             context.toast(e.message)
         }
+    }
+
+    override fun openStatsManga() {
+        router.pushController(
+            StatsMangaController(presenter.manga, presenter.allChapters.map { it.chapter })
+                .withFadeTransaction(),
+        )
     }
 
     override fun openSimilarManga() {

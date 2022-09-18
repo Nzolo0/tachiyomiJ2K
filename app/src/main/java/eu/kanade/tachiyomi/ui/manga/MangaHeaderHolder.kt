@@ -131,6 +131,7 @@ class MangaHeaderHolder(
 
             webviewButton.setOnClickListener { adapter.delegate.openInWebView() }
             similarButton.setOnClickListener { adapter.delegate.openSimilarManga() }
+            statsButton.setOnClickListener { adapter.delegate.openStatsManga() }
             shareButton.setOnClickListener { adapter.delegate.prepareToShareManga() }
             favoriteButton.setOnClickListener {
                 adapter.delegate.favoriteManga(false)
@@ -600,6 +601,7 @@ class MangaHeaderHolder(
             TextViewCompat.setCompoundDrawableTintList(lessButton, ColorStateList.valueOf(accentColor))
             lessButton.setTextColor(accentColor)
             shareButton.imageTintList = ColorStateList.valueOf(accentColor)
+            statsButton.imageTintList = ColorStateList.valueOf(accentColor)
             similarButton.imageTintList = ColorStateList.valueOf(accentColor)
             webviewButton.imageTintList = ColorStateList.valueOf(accentColor)
             filterButton.imageTintList = ColorStateList.valueOf(accentColor)

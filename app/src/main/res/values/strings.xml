@@ -1041,6 +1041,7 @@
     <string name="read_duration_info">Time spent in the reader, based on chapter history</string>
     <string name="manga_status_distribution">Status distribution</string>
     <string name="manga_score_distribution">Score distribution</string>
+    <string name="read_duration_distribution">Read duration distribution</string>
     <string name="view_detailed_statistics">View detailed statistics</string>
     <string name="count">Count</string>
     <string name="not_rated">Not rated</string>
@@ -1061,6 +1062,9 @@
     <plurals name="_languages">
         <item quantity="other">%d languages</item>
     </plurals>
+    <string name="bookmarked_chapters">Bookmarked chapters</string>
+    <string name="chapter_number">Chapter number</string>
+    <string name="_stats">%1$s stats</string>
 
     <!-- Similar -->
     <string name="similar_type">Similar</string>

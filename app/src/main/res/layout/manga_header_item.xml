@@ -219,6 +219,19 @@
                 android:tooltipText="@string/similar" />
 
             <ImageView
+                android:id="@+id/stats_button"
+                style="@style/Theme.Widget.CustomImageButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="0dp"
+                android:layout_marginEnd="4dp"
+                android:contentDescription="@string/stats"
+                android:padding="8dp"
+                android:src="@drawable/ic_query_stats_24dp"
+                android:tooltipText="@string/stats" />
+
+            <ImageView
                 android:id="@+id/share_button"
                 style="@style/Theme.Widget.CustomImageButton"
                 android:layout_width="wrap_content"
