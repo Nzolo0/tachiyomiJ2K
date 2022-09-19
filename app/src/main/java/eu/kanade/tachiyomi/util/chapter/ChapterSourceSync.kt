@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Chapter
 import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.download.DownloadManager
+import eu.kanade.tachiyomi.source.LocalSource
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.online.HttpSource
@@ -28,7 +29,7 @@ fun syncChaptersWithSource(
     manga: Manga,
     source: Source,
 ): Pair<List<Chapter>, List<Chapter>> {
-    if (rawSourceChapters.isEmpty()) {
+    if (rawSourceChapters.isEmpty() && source !is LocalSource) {
         throw Exception("No chapters found")
     }
 
@@ -96,7 +97,7 @@ fun syncChaptersWithSource(
         sourceChapters.any { sourceChapter ->
             dbChapter.url == sourceChapter.url
         }
-    }
+    }.toMutableList()
 
     // Return if there's nothing to add, delete or change, avoid unnecessary db transactions.
     if (toAdd.isEmpty() && toDelete.isEmpty() && toChange.isEmpty()) {
@@ -120,7 +121,6 @@ fun syncChaptersWithSource(
                 }
                 deletedChapterNumbers.add(c.chapter_number)
             }
-            db.deleteChapters(toDelete).executeAsBlocking()
         }
 
         if (toAdd.isNotEmpty()) {
@@ -140,6 +140,8 @@ fun syncChaptersWithSource(
                     toDelete.filter { it.chapter_number == chapter.chapter_number }
                         .minByOrNull { it.date_fetch }?.let {
                             chapter.date_fetch = it.date_fetch
+                            chapter.id = it.id
+                            toDelete.remove(it)
                         }
 
                     readded.add(chapter)
@@ -150,6 +152,7 @@ fun syncChaptersWithSource(
                 chapter.id = chapters.results().getValue(chapter).insertedId()
             }
         }
+        if (toDelete.isNotEmpty()) db.deleteChapters(toDelete).executeAsBlocking()
 
         if (toChange.isNotEmpty()) {
             db.insertChapters(toChange).executeAsBlocking()
