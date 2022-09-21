@@ -1039,7 +1039,11 @@ class MangaDetailsPresenter(
             withContext(Dispatchers.IO) {
                 db.deleteTrackForManga(manga, trackItem.service).executeAsBlocking()
                 if (removeFromService && trackItem.service.canRemoveFromService()) {
-                    trackItem.service.removeFromService(trackItem.track!!)
+                    try {
+                        trackItem.service.removeFromService(trackItem.track!!)
+                    } catch (e: Exception) {
+                        trackError(e)
+                    }
                 }
             }
             fetchTracks()
