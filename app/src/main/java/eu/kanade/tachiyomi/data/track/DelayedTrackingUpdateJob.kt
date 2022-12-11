@@ -21,6 +21,10 @@ import java.util.concurrent.TimeUnit
 class DelayedTrackingUpdateJob(context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
+    private data class DelayedTracking(val mangaId: Long, val syncId: Int, val lastReadChapter: Float) {
+        fun print() = "$mangaId:$syncId:$lastReadChapter"
+    }
+
     override suspend fun doWork(): Result {
         val preferences = Injekt.get<PreferencesHelper>()
         val db = Injekt.get<DatabaseHelper>()
@@ -31,32 +35,32 @@ class DelayedTrackingUpdateJob(context: Context, workerParams: WorkerParameters)
                 null
             } else {
                 val mangaId = items[0].toLongOrNull() ?: return@mapNotNull null
-                val trackId = items[1].toIntOrNull() ?: return@mapNotNull null
+                val syncId = items[1].toIntOrNull() ?: return@mapNotNull null
                 val chapterNumber = items[2].toFloatOrNull() ?: return@mapNotNull null
-                mangaId to (trackId to chapterNumber)
+                DelayedTracking(mangaId, syncId, chapterNumber)
             }
-        }.groupBy { it.first }
+        }.groupBy { it.mangaId }
         withContext(Dispatchers.IO) {
-            trackings.forEach {
-                val mangaId = it.key
-                val manga = db.getManga(mangaId).executeAsBlocking() ?: return@withContext
-                val trackList = db.getTracks(manga).executeAsBlocking()
-                it.value.map { tC ->
-                    val trackChapter = tC.second
-                    val service = trackManager.getService(trackChapter.first)
-                    val track = trackList.find { track -> track.sync_id == trackChapter.first }
+            val trackingsToAdd = mutableSetOf<String>()
+            trackings.forEach { entry ->
+                val mangaId = entry.key
+                val trackList = db.getTracks(mangaId).executeAsBlocking()
+                entry.value.map { delayedTracking ->
+                    val service = trackManager.getService(delayedTracking.syncId)
+                    val track = trackList.find { track -> track.sync_id == delayedTracking.syncId }
                     if (service != null && track != null) {
                         try {
-                            track.last_chapter_read = trackChapter.second
+                            track.last_chapter_read = delayedTracking.lastReadChapter
                             service.update(track, true)
                             db.insertTrack(track).executeAsBlocking()
                         } catch (e: Exception) {
+                            trackingsToAdd.add(delayedTracking.print())
                             Timber.e(e)
                         }
                     }
                 }
             }
-            preferences.trackingsToAddOnline().set(emptySet())
+            preferences.trackingsToAddOnline().set(trackingsToAdd)
         }
         return Result.success()
     }
