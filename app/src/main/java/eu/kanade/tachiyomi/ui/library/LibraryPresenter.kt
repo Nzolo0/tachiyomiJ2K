@@ -735,7 +735,7 @@ class LibraryPresenter(
                 LibraryItem(it, headerItem, viewContext)
             }.toMutableList()
 
-            val categoriesHidden = if (forceShowAllCategories || controllerIsSubClass) {
+            val categoriesHidden = if (forceShowAllCategories) {
                 emptySet()
             } else {
                 preferences.collapsedCategories().get().mapNotNull { it.toIntOrNull() }.toSet()
@@ -906,11 +906,8 @@ class LibraryPresenter(
             }
         }.flatten().toMutableList()
 
-        val hiddenDynamics = if (controllerIsSubClass) {
-            emptySet()
-        } else {
-            preferences.collapsedDynamicCategories().get()
-        }
+        val hiddenDynamics = preferences.collapsedDynamicCategories().get()
+
         var headers = tagItems.map { item ->
             Category.createCustom(
                 item.key,

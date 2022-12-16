@@ -1783,7 +1783,7 @@ open class LibraryController(
      * null = is in single category mode
      */
     fun canCollapseOrExpandCategory(): Boolean? {
-        if (singleCategory || !presenter.showAllCategories || isSubClass) {
+        if (singleCategory || !presenter.showAllCategories) {
             return null
         }
         return presenter.allCategoriesExpanded()

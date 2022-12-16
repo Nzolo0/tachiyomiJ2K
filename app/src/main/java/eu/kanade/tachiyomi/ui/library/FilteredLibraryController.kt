@@ -147,6 +147,5 @@ class FilteredLibraryController(bundle: Bundle? = null) : LibraryController(bund
     override fun toggleSheet() {
         closeTip()
     }
-    override fun toggleCategoryVisibility(position: Int) {}
     override fun manageCategory(position: Int) {}
 }
