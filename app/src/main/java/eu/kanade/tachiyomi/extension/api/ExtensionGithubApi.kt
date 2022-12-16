@@ -59,7 +59,7 @@ internal class ExtensionGithubApi {
                             .newCall(GET("${url}index.min.json"))
                             .await()
                             .parseAs<List<ExtensionJsonObject>>()
-                            .toExtensions(url)
+                            .toExtensions(url, repoSource = true)
                     }
             }
 
@@ -100,7 +100,7 @@ internal class ExtensionGithubApi {
         }
     }
 
-    private fun List<ExtensionJsonObject>.toExtensions(repoUrl: String = getUrlPrefix()): List<Extension.Available> {
+    private fun List<ExtensionJsonObject>.toExtensions(repoUrl: String = getUrlPrefix(), repoSource: Boolean = false): List<Extension.Available> {
         return this
             .filter {
                 val libVersion = it.extractLibVersion()
@@ -121,6 +121,7 @@ internal class ExtensionGithubApi {
                     apkName = it.apk,
                     iconUrl = "${repoUrl}icon/${it.pkg}.png",
                     repoUrl = repoUrl,
+                    isRepoSource = repoSource,
                 )
             }
     }
@@ -144,7 +145,8 @@ internal class ExtensionGithubApi {
 
 const val BASE_URL = "https://raw.githubusercontent.com/"
 const val REPO_URL_PREFIX = "${BASE_URL}tachiyomiorg/tachiyomi-extensions/repo/"
-private const val FALLBACK_REPO_URL_PREFIX = "https://gcore.jsdelivr.net/gh/tachiyomiorg/tachiyomi-extensions@repo/"
+private const val FALLBACK_BASE_URL = "https://gcore.jsdelivr.net/gh/"
+private const val FALLBACK_REPO_URL_PREFIX = "${FALLBACK_BASE_URL}tachiyomiorg/tachiyomi-extensions@repo/"
 
 @Serializable
 private data class ExtensionJsonObject(

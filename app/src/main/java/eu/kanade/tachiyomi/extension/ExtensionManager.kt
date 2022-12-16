@@ -206,8 +206,12 @@ class ExtensionManager(
             }
             if (availableExt != null) {
                 val hasUpdate = installedExt.updateExists(availableExt)
-                if (installedExt.hasUpdate != hasUpdate) {
-                    mutInstalledExtensions[index] = installedExt.copy(hasUpdate = hasUpdate)
+                if (installedExt.hasUpdate != hasUpdate || availableExt.isRepoSource) {
+                    mutInstalledExtensions[index] = installedExt.copy(
+                        hasUpdate = hasUpdate,
+                        isRepoSource = availableExt.isRepoSource,
+                        repoUrl = availableExt.repoUrl,
+                    )
                     hasUpdateCount++
                     changed = true
                 }
@@ -424,7 +428,7 @@ class ExtensionManager(
 
     private fun Extension.Installed.updateExists(availableExtension: Extension.Available? = null): Boolean {
         val availableExt = availableExtension ?: availableExtensionsFlow.value.find { it.pkgName == pkgName }
-        if (isUnofficial || availableExt == null) return false
+        if ((isUnofficial && availableExt?.isRepoSource != true) || availableExt == null) return false
 
         return (availableExt.versionCode > versionCode || availableExt.libVersion > libVersion)
     }
