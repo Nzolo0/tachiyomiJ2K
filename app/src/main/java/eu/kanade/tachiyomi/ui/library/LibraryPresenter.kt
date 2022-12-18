@@ -109,6 +109,8 @@ class LibraryPresenter(
 
     private val controllerIsSubClass
         get() = view?.isSubClass == true
+    private var collapsedCategoriesSub = mutableSetOf<String>()
+    private var collapsedDynamicCategoriesSub = mutableSetOf<String>()
 
     var hasActiveFilters: Boolean = run {
         val filterDownloaded = preferences.filterDownloaded().get()
@@ -735,10 +737,10 @@ class LibraryPresenter(
                 LibraryItem(it, headerItem, viewContext)
             }.toMutableList()
 
-            val categoriesHidden = if (forceShowAllCategories) {
-                emptySet()
-            } else {
-                preferences.collapsedCategories().get().mapNotNull { it.toIntOrNull() }.toSet()
+            val categoriesHidden = when {
+                forceShowAllCategories -> emptySet()
+                controllerIsSubClass -> collapsedCategoriesSub.mapNotNull { it.toIntOrNull() }.toSet()
+                else -> preferences.collapsedCategories().get().mapNotNull { it.toIntOrNull() }.toSet()
             }
 
             if (categorySet.contains(0).not()) categories.removeAt(0)
@@ -906,7 +908,11 @@ class LibraryPresenter(
             }
         }.flatten().toMutableList()
 
-        val hiddenDynamics = preferences.collapsedDynamicCategories().get()
+        val hiddenDynamics = if (controllerIsSubClass) {
+            collapsedDynamicCategoriesSub
+        } else {
+            preferences.collapsedDynamicCategories().get()
+        }
 
         var headers = tagItems.map { item ->
             Category.createCustom(
@@ -1200,30 +1206,37 @@ class LibraryPresenter(
     }
 
     fun toggleCategoryVisibility(categoryId: Int) {
-        // if (categories.find { it.id == categoryId }?.isDynamic == true) return
         if (groupType == BY_DEFAULT) {
-            val categoriesHidden = preferences.collapsedCategories().get().mapNotNull {
-                it.toIntOrNull()
-            }.toMutableSet()
-            if (categoryId in categoriesHidden) {
-                categoriesHidden.remove(categoryId)
+            if (controllerIsSubClass) {
+                collapsedCategoriesSub.apply {
+                    getHiddenCategories(categoryId.toString(), this)
+                }
             } else {
-                categoriesHidden.add(categoryId)
+                val categoriesHidden = preferences.collapsedCategories().get().toMutableSet()
+                preferences.collapsedCategories().set(getHiddenCategories(categoryId.toString(), categoriesHidden))
             }
-            preferences.collapsedCategories()
-                .set(categoriesHidden.map { it.toString() }.toMutableSet())
         } else {
-            val categoriesHidden = preferences.collapsedDynamicCategories().get().toMutableSet()
             val category = getCategory(categoryId)
             val dynamicName = getDynamicCategoryName(category)
-            if (dynamicName in categoriesHidden) {
-                categoriesHidden.remove(dynamicName)
+            if (controllerIsSubClass) {
+                collapsedDynamicCategoriesSub.apply {
+                    getHiddenCategories(dynamicName, this)
+                }
             } else {
-                categoriesHidden.add(dynamicName)
+                val categoriesHidden = preferences.collapsedDynamicCategories().get().toMutableSet()
+                preferences.collapsedDynamicCategories().set(getHiddenCategories(dynamicName, categoriesHidden))
             }
-            preferences.collapsedDynamicCategories().set(categoriesHidden)
         }
         getLibrary()
+    }
+
+    private fun getHiddenCategories(category: String, categoriesHidden: MutableSet<String>): MutableSet<String> {
+        if (category in categoriesHidden) {
+            categoriesHidden.remove(category)
+        } else {
+            categoriesHidden.add(category)
+        }
+        return categoriesHidden
     }
 
     private fun getDynamicCategoryName(category: Category): String =
