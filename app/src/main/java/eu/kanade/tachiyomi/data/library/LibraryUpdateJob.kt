@@ -384,7 +384,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             val noUnreadChapters = manga.unread == 0
             val downloadOnlyCompletelyRead = preferences.downloadOnlyCompletelyRead().get()
             val shouldDownload = (!downloadOnlyCompletelyRead || noUnreadChapters) &&
-                    manga.shouldDownloadNewChapters(db, preferences)
+                manga.shouldDownloadNewChapters(db, preferences)
             if (updateMangaChapters(manga, this.count.andIncrement, httpSource, shouldDownload)) {
                 hasDownloads = true
             }

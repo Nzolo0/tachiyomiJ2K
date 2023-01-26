@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.data.database.models.Manga.SourceManga
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.online.handlers.SimilarHandler
+import eu.kanade.tachiyomi.util.manga.MangaMappings
 import eu.kanade.tachiyomi.util.toDisplayManga
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -21,6 +22,7 @@ class SimilarRepository {
 
     private val similarHandler: SimilarHandler by injectLazy()
     private val db: DatabaseHelper by injectLazy()
+    private val mappings: MangaMappings by injectLazy()
     val sourceManager: SourceManager by injectLazy()
 
     suspend fun fetchSimilar(
@@ -107,7 +109,7 @@ class SimilarRepository {
                 else -> null
             }
             Timber.d("media_id: ${it.media_id}")
-            similarHandler.mappings.getMangadexID(it.media_id.toString(), service)
+            mappings.getMangadexID(it.media_id.toString(), service)
         } ?: ""
     }
 

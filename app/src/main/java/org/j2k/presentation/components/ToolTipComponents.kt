@@ -5,12 +5,12 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.minimumInteractiveComponentSize
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.minimumTouchTargetSize
 import androidx.compose.material3.toColor
 import androidx.compose.material3.tokens.IconButtonTokens
 import androidx.compose.runtime.Composable
@@ -96,7 +96,7 @@ fun CombinedClickableIconButton(
     Box(
         modifier =
         modifier
-            .minimumTouchTargetSize()
+            .minimumInteractiveComponentSize()
             .size(IconButtonTokens.StateLayerSize),
         contentAlignment = Alignment.Center,
     ) {
