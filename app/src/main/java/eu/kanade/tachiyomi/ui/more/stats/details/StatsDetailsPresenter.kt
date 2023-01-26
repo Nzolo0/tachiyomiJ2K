@@ -44,6 +44,7 @@ class StatsDetailsPresenter(
 
     private val context
         get() = view?.view?.context ?: prefs.context
+    var categories = getFilteredCategories()
     var libraryMangas = getLibrary()
         set(value) {
             field = value
@@ -100,7 +101,7 @@ class StatsDetailsPresenter(
     private val defaultCategory by lazy {
         if (libraryMangas.any { it.category == 0 }) arrayOf(Category.createDefault(context)) else emptyArray()
     }
-    val categoriesStats by lazy { defaultCategory + getCategories().toTypedArray() }
+    val categoriesStats by lazy { defaultCategory + categories.toTypedArray() }
     val languagesStats by lazy {
         prefs.enabledLanguages().get()
             .associateWith { lang -> LocaleHelper.getSourceDisplayName(lang, context) }
@@ -300,7 +301,6 @@ class StatsDetailsPresenter(
     private fun setupCategories() {
         currentStats = ArrayList()
         val libraryFormat = libraryMangas.filterByChip().groupBy { it.category }
-        val categories = getCategories()
 
         libraryFormat.forEach { (category, mangaList) ->
             val label = categories.find { it.id == category }?.name ?: context.getString(R.string.default_value)
@@ -556,11 +556,27 @@ class StatsDetailsPresenter(
     }
 
     fun getLibrary(): MutableList<LibraryManga> {
-        return db.getLibraryMangas().executeAsBlocking()
+        val hideCategories = prefs.hideCategories().get()
+        return if (hideCategories) {
+            db.getLibraryMangas().executeAsBlocking().filter {
+                it.category in categories.map(Category::id)
+            }.toMutableList()
+        } else {
+            db.getLibraryMangas().executeAsBlocking()
+        }
     }
 
-    private fun getCategories(): MutableList<Category> {
-        return db.getCategories().executeAsBlocking()
+    private fun getFilteredCategories(): MutableList<Category> {
+        val hideCategories = prefs.hideCategories().get()
+        return if (hideCategories) {
+            val includedCategories = prefs.libraryCategoriesVisibility().get().map(String::toInt)
+            val excludedCategories = prefs.libraryCategoriesVisibilityExclude().get().map(String::toInt)
+            return db.getCategories().executeAsBlocking().filter {
+                it.id !in excludedCategories && (includedCategories.isEmpty() || it.id in includedCategories)
+            }.toMutableList()
+        } else {
+            db.getCategories().executeAsBlocking()
+        }
     }
 
     private fun List<LibraryManga>.getReadDuration(): Long {
@@ -575,12 +591,13 @@ class StatsDetailsPresenter(
         val calendar = Calendar.getInstance().apply {
             timeInMillis = startDate.timeInMillis
         }
-
+        val hideCategories = prefs.hideCategories().get()
         return (0 until daysRange).associate { _ ->
             Calendar.getInstance().apply { timeInMillis = calendar.timeInMillis } to history.filter {
                 val calH = Calendar.getInstance().apply { timeInMillis = it.history.last_read }
                 calH.get(Calendar.DAY_OF_YEAR) == calendar.get(Calendar.DAY_OF_YEAR) &&
-                    calH.get(Calendar.YEAR) == calendar.get(Calendar.YEAR)
+                    calH.get(Calendar.YEAR) == calendar.get(Calendar.YEAR) &&
+                    (!hideCategories || it.manga.id in mangasDistinct.map(LibraryManga::id))
             }.also { calendar.add(Calendar.DAY_OF_WEEK, 1) }
         }
     }

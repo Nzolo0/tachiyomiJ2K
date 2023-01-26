@@ -138,7 +138,7 @@ fun getHistoryPerPeriodQuery(startDate: Long, endDate: Long) =
     ON ${Manga.TABLE}.${Manga.COL_ID} = ${Chapter.TABLE}.${Chapter.COL_MANGA_ID}
     JOIN ${History.TABLE}
     ON ${Chapter.TABLE}.${Chapter.COL_ID} = ${History.TABLE}.${History.COL_CHAPTER_ID}
-    AND ${History.TABLE}.${History.COL_LAST_READ} >= $startDate
+    WHERE ${History.TABLE}.${History.COL_LAST_READ} >= $startDate
     AND ${History.TABLE}.${History.COL_LAST_READ} <= $endDate
     ORDER BY ${History.TABLE}.${History.COL_LAST_READ} DESC
 """
