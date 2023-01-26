@@ -753,6 +753,7 @@ class StatsDetailsController :
         highlightedDay = e?.let { presenter.historyByDayAndManga.keys.toTypedArray()[e.x.toInt()] }
         presenter.setupReadDuration(highlightedDay)
         updateStatsAdapter(true)
+        if (query.isNotBlank()) statsAdapter?.filter(query)
     }
 
     override fun getHighlight(): Highlight? =

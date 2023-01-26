@@ -195,8 +195,6 @@ class StatsDetailsChartLayout @JvmOverloads constructor(
     }
 
     private fun handleStartYearLayout() {
-        presenter?.currentStats?.sortBy { it.label }
-
         val lineEntries = presenter?.currentStats?.filterNot { it.label?.toFloatOrNull() == null }
             ?.map { Entry(it.label?.toFloat()!!, it.count.toFloat()) }
         if (lineEntries.isNullOrEmpty()) return

@@ -365,6 +365,7 @@ class StatsDetailsPresenter(
                 ),
             )
         }
+        currentStats?.sortBy { it.label }
     }
 
     fun setupReadDuration(day: Calendar? = null) {
