@@ -34,7 +34,7 @@ private class RateLimitInterceptor(
 ) : Interceptor {
 
     private val requestQueue = ArrayList<Long>(permits)
-    private val rateLimitMillis = unit.toMillis(period)
+    private val rateLimitMillis = TimeUnit.SECONDS.toMillis(minOf(permits.toLong(), period))
 
     override fun intercept(chain: Interceptor.Chain): Response {
         // Ignore canceled calls, otherwise they would jam the queue
