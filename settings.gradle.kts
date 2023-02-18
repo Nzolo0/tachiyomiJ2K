@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "TachiyomiJ2K"
+rootProject.name = "TachiyomiBA"
 include(":app")

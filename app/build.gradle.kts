@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.konan.properties.loadProperties
 import java.io.ByteArrayOutputStream
 
 plugins {
@@ -9,12 +8,6 @@ plugins {
     id(Plugins.kotlinSerialization)
     id("com.google.android.gms.oss-licenses-plugin")
     id("com.mikepenz.aboutlibraries.plugin")
-    id(Plugins.googleServices) apply false
-    id("com.google.firebase.crashlytics")
-}
-
-if (gradle.startParameter.taskRequests.toString().contains("Standard")) {
-    apply<com.google.gms.googleservices.GoogleServicesPlugin>()
 }
 
 fun runCommand(command: String): String {
@@ -26,19 +19,9 @@ fun runCommand(command: String): String {
     return String(byteOut.toByteArray()).trim()
 }
 
-val keyStoreProperties = loadProperties("keystore.properties")
-
 val supportedAbis = setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
 
 android {
-    signingConfigs {
-        create("release") {
-            storeFile = file(keyStoreProperties.getProperty("STORE_FILE"))
-            storePassword = keyStoreProperties.getProperty("STORE_PASSWORD")
-            keyAlias = keyStoreProperties.getProperty("KEY_ALIAS")
-            keyPassword = keyStoreProperties.getProperty("STORE_PASSWORD")
-        }
-    }
     compileSdk = AndroidVersions.compileSdk
     ndkVersion = AndroidVersions.ndk
 
@@ -83,11 +66,10 @@ android {
             versionNameSuffix = "-d${getCommitCount()}"
         }
         getByName("release") {
-            applicationIdSuffix = ".j2k"
+            applicationIdSuffix = ".customj2k"
             isShrinkResources = true
             isMinifyEnabled = true
             proguardFiles("proguard-android-optimize.txt", "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("release")
         }
         create("beta") {
             initWith(getByName("release"))

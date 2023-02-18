@@ -24,7 +24,12 @@ fun Project.getBetaCount(): String {
 
 
 fun Project.getGitSha(): String {
-    return runCommand("git rev-parse --short master")
+    var remote = runCommand("git remote -v")
+    if ("upstream" !in remote) {
+        runCommand("git remote add upstream https://github.com/Jays2Kings/tachiyomiJ2K.git")
+        runCommand("git fetch upstream master")
+    }
+    return runCommand("git rev-parse --short upstream/master")
     // return "1"
 }
 
