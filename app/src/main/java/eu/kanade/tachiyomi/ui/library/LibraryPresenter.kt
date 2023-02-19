@@ -695,7 +695,8 @@ class LibraryPresenter(
         val hideCategories = preferences.hideCategories().get()
         val includedCategories = preferences.libraryCategoriesVisibility().get().map(String::toInt)
         val excludedCategories = preferences.libraryCategoriesVisibilityExclude().get().map(String::toInt)
-        val categories = (listOf(createDefaultCategory()) + db.getCategories().executeAsBlocking())
+        val defaultCategory = createDefaultCategory()
+        val categories = (listOf(defaultCategory) + db.getCategories().executeAsBlocking())
             .filter { !hideCategories || it.id !in excludedCategories && (includedCategories.isEmpty() || it.id in includedCategories) }
             .toMutableList()
         val categoriesId = categories.map { it.id }
@@ -722,7 +723,7 @@ class LibraryPresenter(
                     } else {
                         id to LibraryHeaderItem({ getCategory(id) }, id)
                     }
-                } + (-1 to catItemAll)
+                } + (-1 to catItemAll) + (0 to LibraryHeaderItem({ getCategory(0) }, 0))
                 ).toMap()
 
             val items = libraryManga.mapNotNull {
@@ -743,7 +744,7 @@ class LibraryPresenter(
                 else -> preferences.collapsedCategories().get().mapNotNull { it.toIntOrNull() }.toSet()
             }
 
-            if (categorySet.contains(0).not()) categories.removeAt(0)
+            if (categorySet.contains(0).not()) categories.remove(defaultCategory)
             if (libraryIsGrouped) {
                 categories.forEach { category ->
                     val catId = category.id ?: return@forEach
