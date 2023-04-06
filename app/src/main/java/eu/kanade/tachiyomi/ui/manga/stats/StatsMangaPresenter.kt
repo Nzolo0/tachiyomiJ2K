@@ -88,7 +88,7 @@ class StatsMangaPresenter(
     fun getReadDurationData() {
         presenterScope.launchIO {
             setupReadDuration()
-            withUIContext { controller?.updateStats() }
+            withUIContext { view?.updateStats() }
         }
     }
 

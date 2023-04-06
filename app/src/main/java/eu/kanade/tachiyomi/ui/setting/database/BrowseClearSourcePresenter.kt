@@ -37,7 +37,7 @@ open class BrowseClearSourcePresenter(
         presenterScope.launchIO {
             val mangas = getReadMangaPerSource(sourceId)
             val items = mangas.map { BrowseSourceItem(it, browseAsList, sourceListType, outlineCovers) }
-            withUIContext { controller?.updateAdapter(items) }
+            withUIContext { view?.updateAdapter(items) }
         }
     }
 
