@@ -1,9 +1,12 @@
 package eu.kanade.tachiyomi.network.interceptor
 
 import android.os.SystemClock
+import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Response
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
@@ -31,10 +34,23 @@ private class RateLimitInterceptor(
     private val permits: Int,
     period: Long,
     unit: TimeUnit,
+    preferences: PreferencesHelper = Injekt.get(),
 ) : Interceptor {
 
     private val requestQueue = ArrayList<Long>(permits)
-    private val rateLimitMillis = TimeUnit.SECONDS.toMillis(minOf(permits.toLong(), period))
+    val allowCustomRateLimit = preferences.allowRateLimitOptimization().get()
+    private val rateLimitMillis = if (allowCustomRateLimit) {
+        val periodInSeconds = unit.toSeconds(period)
+        /* The rate limit is at most as harsh as X requests per X seconds. Examples :
+            - 3 requests per 2 seconds
+            -> keep limit at 3 requests per 2 seconds
+            - 3 requests per 4 seconds
+            -> change to limit at 3 requests per 3 seconds
+         */
+        TimeUnit.SECONDS.toMillis(minOf(permits.toLong(), periodInSeconds))
+    } else {
+        unit.toMillis(period)
+    }
 
     override fun intercept(chain: Interceptor.Chain): Response {
         // Ignore canceled calls, otherwise they would jam the queue

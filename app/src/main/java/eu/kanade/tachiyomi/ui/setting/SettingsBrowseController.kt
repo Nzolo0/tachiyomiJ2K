@@ -117,6 +117,11 @@ class SettingsBrowseController : SettingsController() {
                 key = PreferenceKeys.onlySearchPinned
                 titleRes = R.string.only_search_pinned_when
             }
+
+            switchPreference {
+                key = PreferenceKeys.allowRateLimitOptimization
+                titleRes = R.string.allow_rate_limit_optimization
+            }
         }
 
         preferenceCategory {

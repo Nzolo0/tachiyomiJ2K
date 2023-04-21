@@ -301,6 +301,9 @@ dependencies {
     // PastelPlaceholders
     implementation("com.github.zedlabs:pastelPlaceholders:1.0.4")
 
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+
     //Compose
     implementation(compose.bundles.compose)
     implementation(compose.gap)
@@ -371,4 +374,9 @@ tasks {
     preBuild {
         dependsOn(formatKotlin, copyHebrewStrings)
     }
+
+    withType<Test> {
+        useJUnitPlatform()
+    }
+
 }

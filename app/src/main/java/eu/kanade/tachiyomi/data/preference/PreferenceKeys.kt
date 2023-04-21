@@ -149,6 +149,8 @@ object PreferenceKeys {
 
     const val onlySearchPinned = "only_search_pinned"
 
+    const val allowRateLimitOptimization = "allow_rate_limit_optimization"
+
     const val libraryLayout = "pref_display_library_layout"
 
     const val gridSize = "grid_size_float"
