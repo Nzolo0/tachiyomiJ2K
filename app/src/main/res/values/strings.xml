@@ -241,7 +241,7 @@
     <string name="search_suggestions">Search suggestions</string>
     <string name="search_tips_show_periodically">Search tips will show up periodically. Long press the suggestion to search it.</string>
     <string name="hide_chosen_categories">Hide chosen categories</string>
-    <string name="library_categories_visibility">Library categories visibility</string>
+    <string name="library_hidden_categories">Library hidden categories</string>
 
     <!-- Recents -->
     <string name="recents">Recents</string>

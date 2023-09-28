@@ -569,10 +569,9 @@ class StatsDetailsPresenter(
     private fun getFilteredCategories(): MutableList<Category> {
         val hideCategories = prefs.hideCategories().get()
         return if (hideCategories) {
-            val includedCategories = prefs.libraryCategoriesVisibility().get().map(String::toInt)
-            val excludedCategories = prefs.libraryCategoriesVisibilityExclude().get().map(String::toInt)
-            return db.getCategories().executeAsBlocking().filter {
-                it.id !in excludedCategories && (includedCategories.isEmpty() || it.id in includedCategories)
+            val hiddenCategories = prefs.libraryHiddenCategories().get().map(String::toInt)
+            return db.getCategories().executeAsBlocking().filterNot {
+                it.id in hiddenCategories
             }.toMutableList()
         } else {
             db.getCategories().executeAsBlocking()

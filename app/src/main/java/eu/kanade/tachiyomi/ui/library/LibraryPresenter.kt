@@ -693,11 +693,10 @@ class LibraryPresenter(
     private fun getLibraryFromDB(): Pair<List<LibraryItem>, List<LibraryItem>> {
         removeArticles = preferences.removeArticles().get()
         val hideCategories = preferences.hideCategories().get()
-        val includedCategories = preferences.libraryCategoriesVisibility().get().map(String::toInt)
-        val excludedCategories = preferences.libraryCategoriesVisibilityExclude().get().map(String::toInt)
+        val hiddenCategories = preferences.libraryHiddenCategories().get().map(String::toInt)
         val defaultCategory = createDefaultCategory()
         val categories = (listOf(defaultCategory) + db.getCategories().executeAsBlocking())
-            .filter { !hideCategories || it.id !in excludedCategories && (includedCategories.isEmpty() || it.id in includedCategories) }
+            .filterNot { hideCategories && it.id in hiddenCategories }
             .toMutableList()
         val categoriesId = categories.map { it.id }
         var libraryManga = db.getLibraryMangas().executeAsBlocking().filter { it.category in categoriesId }

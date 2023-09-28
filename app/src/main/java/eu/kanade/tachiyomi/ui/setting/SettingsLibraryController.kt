@@ -193,16 +193,14 @@ class SettingsLibraryController : SettingsController() {
                 titleRes = R.string.hide_chosen_categories
             }
 
-            triStateListPreference(activity) {
-                preferences.apply {
-                    bindTo(libraryCategoriesVisibility(), libraryCategoriesVisibilityExclude())
-                }
-                titleRes = R.string.library_categories_visibility
+            multiSelectListPreferenceMat(activity) {
+                bindTo(preferences.libraryHiddenCategories())
+                titleRes = R.string.library_hidden_categories
 
                 val categories = listOf(Category.createDefault(context)) + dbCategories
                 entries = categories.map { it.name }
                 entryValues = categories.map { it.id.toString() }
-                allSelectionRes = R.string.all
+                noSelectionRes = R.string.none
 
                 preferences.hideCategories().asImmediateFlowIn(viewScope) { isVisible = it }
             }

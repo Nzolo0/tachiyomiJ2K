@@ -264,8 +264,7 @@ class PreferencesHelper(val context: Context) {
     fun libraryUpdateCategoriesExclude() = flowPrefs.getStringSet("library_update_categories_exclude", emptySet())
 
     fun hideCategories() = flowPrefs.getBoolean("hide_categories", false)
-    fun libraryCategoriesVisibility() = flowPrefs.getStringSet("library_categories_visibility", emptySet())
-    fun libraryCategoriesVisibilityExclude() = flowPrefs.getStringSet("library_categories_visibility_exclude", emptySet())
+    fun libraryHiddenCategories() = flowPrefs.getStringSet("library_hidden_categories", emptySet())
 
     fun libraryLayout() = flowPrefs.getInt(Keys.libraryLayout, LibraryItem.LAYOUT_COMFORTABLE_GRID)
 
