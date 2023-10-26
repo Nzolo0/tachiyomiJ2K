@@ -250,12 +250,11 @@ class StatsDetailsPresenter(
         val libraryFormat = mangasDistinct.filterByChip()
             .map { it to getTracks(it).ifEmpty { listOf(null) } }
             .flatMap { it.second.map { track -> it.first to track } }
-        val loggedServices = trackManager.services.filter { it.isLogged }
 
         val serviceWithTrackedManga = libraryFormat.groupBy { it.second?.sync_id }
 
         serviceWithTrackedManga.forEach { (serviceId, mangaAndTrack) ->
-            val service = loggedServices.find { it.id == serviceId }
+            val service = serviceId?.let { trackManager.getService(it) }
             val label = context.getString(service?.nameRes() ?: R.string.not_tracked)
             currentStats?.add(
                 StatsData(
@@ -552,7 +551,10 @@ class StatsDetailsPresenter(
     }
 
     fun getTracks(manga: Manga): MutableList<Track> {
+        val loggedServices = trackManager.services.filter { it.isLogged }.map { it.id }
         return db.getTracks(manga).executeAsBlocking()
+            .filter { it.sync_id in loggedServices }
+            .toMutableList()
     }
 
     fun getLibrary(): MutableList<LibraryManga> {

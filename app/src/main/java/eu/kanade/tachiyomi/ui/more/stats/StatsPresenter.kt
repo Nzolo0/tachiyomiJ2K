@@ -38,7 +38,10 @@ class StatsPresenter(
     }
 
     fun getTracks(manga: Manga): MutableList<Track> {
+        val loggedServices = getLoggedTrackers().map { it.id }
         return db.getTracks(manga).executeAsBlocking()
+            .filter { it.sync_id in loggedServices }
+            .toMutableList()
     }
 
     fun getLoggedTrackers(): List<TrackService> {

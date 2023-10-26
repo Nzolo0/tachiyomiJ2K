@@ -61,7 +61,10 @@ class StatsMangaPresenter(
     }
 
     fun getTracks(manga: Manga): MutableList<Track> {
+        val loggedServices = trackManager.services.filter { it.isLogged }.map { it.id }
         return db.getTracks(manga).executeAsBlocking()
+            .filter { it.sync_id in loggedServices }
+            .toMutableList()
     }
 
     fun getDownloadCount(manga: Manga): Int {
