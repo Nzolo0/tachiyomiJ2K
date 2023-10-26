@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:clipToPadding="false"
+    android:background="?background"
     android:fitsSystemWindows="true"
     tools:context="eu.kanade.tachiyomi.ui.manga.stats.StatsMangaController">
 
@@ -316,28 +317,28 @@
 
             <TextView
                 android:id="@+id/stat_sort"
+                style="?textAppearanceBodyMedium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="end"
                 android:layout_marginEnd="12dp"
+                android:alpha=".8"
                 android:background="@drawable/square_ripple"
                 android:clickable="true"
                 android:drawablePadding="6dp"
-                android:alpha=".8"
-                app:drawableTint="?android:textColorPrimary"
                 android:ellipsize="start"
                 android:focusable="true"
                 android:gravity="center|end"
                 android:maxLines="2"
-                android:paddingTop="12dp"
-                android:paddingBottom="12dp"
                 android:paddingStart="6dp"
+                android:paddingTop="12dp"
                 android:paddingEnd="6dp"
-                android:layout_gravity="end"
+                android:paddingBottom="12dp"
                 android:textAlignment="textEnd"
-                style="?textAppearanceBodyMedium"
                 android:textColor="?android:attr/textColorPrimary"
-                tools:text="Chapter number"
-                app:drawableEndCompat="@drawable/ic_sort_24dp" />
+                app:drawableEndCompat="@drawable/ic_sort_24dp"
+                app:drawableTint="?android:textColorPrimary"
+                tools:text="Chapter number" />
 
             <RelativeLayout
                 android:id="@+id/stats_date_layout"
@@ -420,9 +421,9 @@
                 android:id="@+id/stats_recycler_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/marginNormal"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="false"
-                android:layout_marginTop="@dimen/marginNormal"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
         </LinearLayout>
