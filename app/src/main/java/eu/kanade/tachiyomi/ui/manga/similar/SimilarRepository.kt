@@ -38,7 +38,7 @@ class SimilarRepository {
             val lang = sourceManager.getOrStub(manga.source).lang.ifBlank { "en" }
                 .uppercase(Locale.getDefault())
 
-            val dexId = getDexId(manga)
+            val dexId = getDexUUID(manga)
 
             val related = async {
                 kotlin.runCatching {
@@ -99,17 +99,17 @@ class SimilarRepository {
         }
     }
 
-    private fun getDexId(manga: Manga): String {
-        return db.getTracks(manga).executeAsBlocking().firstNotNullOfOrNull {
-            val service = when (it.sync_id) {
+    private fun getDexUUID(manga: Manga): String {
+        return db.getTracks(manga).executeAsBlocking().firstNotNullOfOrNull { track ->
+            val service = when (track.sync_id) {
                 TrackManager.MANGA_UPDATES -> "mu_new"
                 TrackManager.ANILIST -> "al"
                 TrackManager.MYANIMELIST -> "mal"
                 TrackManager.KITSU -> "kt"
                 else -> null
             }
-            Timber.d("media_id: ${it.media_id}")
-            mappings.getMangadexID(it.media_id.toString(), service)
+            Timber.d("media_id: ${track.media_id}")
+            service?.let { mappings.getMangadexUUID(track.media_id.toString(), service) }
         } ?: ""
     }
 

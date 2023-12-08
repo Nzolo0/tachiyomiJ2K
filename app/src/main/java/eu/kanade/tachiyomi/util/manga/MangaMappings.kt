@@ -14,7 +14,7 @@ import java.io.OutputStream
  */
 class MangaMappings(context: Context) {
 
-    val dbMappings: SQLiteDatabase by lazy { openDatabase(context, "20230714_mappings.db") }
+    private val dbMappings: SQLiteDatabase by lazy { openDatabase(context, "2023-12-01_neko_mapping.db") }
 
     private fun openDatabase(context: Context, dbPath: String): SQLiteDatabase {
         val dbFile: File = context.getDatabasePath(dbPath)
@@ -41,31 +41,28 @@ class MangaMappings(context: Context) {
         `is`.close()
     }
 
-    fun getMangadexID(id: String, service: String?): String? {
-        if (service.isNullOrBlank() || !dbMappings.isOpen) {
-            return null
-        }
+    fun getMangadexUUID(id: String, service: String): String? {
         val queryString = "SELECT mdex FROM mappings WHERE ${service.lowercase()} = ? LIMIT 1"
         val whereArgs = arrayOf(id)
-        val cursor = dbMappings.rawQuery(queryString, whereArgs) ?: return ""
-        if (cursor.moveToFirst()) {
-            return cursor.getString(0)
-        }
-        cursor.close()
-        return null
+        return getResult(queryString, whereArgs)
     }
 
-    fun getExternalID(id: String, service: String?): String? {
-        if (service.isNullOrBlank() || !dbMappings.isOpen) {
-            return null
-        }
+    fun getExternalID(id: String, service: String): String? {
         val queryString = "SELECT ${service.lowercase()} FROM mappings WHERE mdex = ? LIMIT 1"
         val whereArgs = arrayOf(id)
-        val cursor = dbMappings.rawQuery(queryString, whereArgs) ?: return ""
+        return getResult(queryString, whereArgs)
+    }
+
+    private fun getResult(queryString: String, whereArgs: Array<String>): String? {
+        if (!dbMappings.isOpen) {
+            return null
+        }
+        val cursor = dbMappings.rawQuery(queryString, whereArgs) ?: return null
+        var result: String? = null
         if (cursor.moveToFirst()) {
-            return cursor.getString(0)
+            result = cursor.getString(0)?.ifBlank { null }
         }
         cursor.close()
-        return null
+        return result
     }
 }

@@ -25,8 +25,8 @@ import eu.kanade.tachiyomi.util.log
 import eu.kanade.tachiyomi.util.manga.MangaMappings
 import eu.kanade.tachiyomi.util.system.withIOContext
 import eu.kanade.tachiyomi.util.throws
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 import uy.kohesive.injekt.injectLazy
 import java.util.Locale
@@ -35,7 +35,8 @@ class SimilarHandler {
 
     private val network: NetworkHelper by injectLazy()
     private val db: DatabaseHelper by injectLazy()
-    val mappings: MangaMappings by injectLazy()
+    private val mappings: MangaMappings by injectLazy()
+    private val json: Json by injectLazy()
 
     suspend fun fetchRelated(
         dexId: String,
@@ -128,12 +129,20 @@ class SimilarHandler {
         forceRefresh: Boolean,
     ): List<SourceManga> {
         if (forceRefresh && dexId.isNotEmpty()) {
-            val response = network.similarService.getSimilarManga(dexId)
-                .onFailure {
-                    Timber.e("trying to get similar manga, $this")
-                }.getOrNull()
+            val response = network.similarService.getSimilarMangaString(dexId.substring(0, 2), dexId.substring(0, 3)).onFailure {
+                Timber.e("trying to get similar manga, $this")
+            }.getOrNull()
 
-            similarMangaParse(mangaId.toString(), response)
+            val dto = response?.split("\n")?.firstNotNullOfOrNull { line ->
+                val splitLine = line.split(":::||@!@||:::")
+                if (splitLine.isNotEmpty() && splitLine.size == 2 && splitLine[0] == dexId) {
+                    json.decodeFromString<SimilarMangaDto>(splitLine[1])
+                } else {
+                    null
+                }
+            }
+
+            similarMangaParse(mangaId.toString(), dto)
         }
 
         val mangaDb = db.getSimilar(mangaId.toString()).executeAsBlocking()
@@ -188,7 +197,7 @@ class SimilarHandler {
             // Main network request
             val graphql =
                 """{ Media(id: $anilistId, type: MANGA) { recommendations { edges { node { mediaRecommendation { id format } rating } } } } }"""
-            val response = network.similarService.getAniListGraphql(graphql).onFailure {
+            val response = network.thirdPartySimilarService.getAniListGraphql(graphql).onFailure {
                 val type = "trying to get Anilist recommendations"
                 this.log(type)
                 if ((this is ApiResponse.Failure.Error && this.statusCode.code == 404) || this is ApiResponse.Failure.Exception) {
@@ -219,7 +228,7 @@ class SimilarHandler {
             if (it.node.mediaRecommendation.format != "MANGA") {
                 return@map null
             }
-            val id = mappings.getMangadexID(it.node.mediaRecommendation.id.toString(), "al")
+            val id = mappings.getMangadexUUID(it.node.mediaRecommendation.id.toString(), "al")
             val text = it.node.rating.toString() + " user votes"
             id to text
         }.filterNotNull().toMap()
@@ -251,7 +260,7 @@ class SimilarHandler {
         if (forceRefresh && dexId.isNotEmpty()) {
             // See if we have a valid mapping for our MAL service
             val malId = mappings.getExternalID(dexId, "mal") ?: return emptyList()
-            val response = network.similarService.getSimilarMalManga(malId).onFailure {
+            val response = network.thirdPartySimilarService.getSimilarMalManga(malId).onFailure {
                 val type = "trying to get MAL similar manga"
                 this.log(type)
                 if ((this is ApiResponse.Failure.Error && this.statusCode.code == 404) || this is ApiResponse.Failure.Exception) {
@@ -277,9 +286,9 @@ class SimilarHandler {
         similarDto ?: return
 
         // Get our page of mangaList
-        val idPairs = similarDto.recommendations.associate {
-            val id = mappings.getMangadexID(it.mal_id.toString(), "mal")
-            val text = it.recommendation_count.toString() + " user votes"
+        val idPairs = similarDto.data.associate {
+            val id = mappings.getMangadexUUID(it.entry.mal_id.toString(), "mal")
+            val text = it.votes.toString() + " user votes"
             id to text
         }
         if (idPairs.isEmpty()) {
@@ -313,7 +322,7 @@ class SimilarHandler {
         if (forceRefresh && dexId.isNotEmpty()) {
             // See if we have a valid mapping for our MU service
             val muId = mappings.getExternalID(dexId, "mu_new") ?: return emptyList()
-            val response = network.similarService.getSimilarMUManga(muId).onFailure {
+            val response = network.thirdPartySimilarService.getSimilarMUManga(muId).onFailure {
                 val type = "trying to get MU similar manga"
                 this.log(type)
                 if ((this is ApiResponse.Failure.Error && this.statusCode.code == 404) || this is ApiResponse.Failure.Exception) {
@@ -342,12 +351,12 @@ class SimilarHandler {
 
         // Get our page of mangaList
         val idPairs = similarDto.recommendations.associate {
-            val id = mappings.getMangadexID(it.series_id.toString(), "mu_new")
+            val id = mappings.getMangadexUUID(it.series_id.toString(), "mu_new")
             val text = it.weight.toString() + " user votes"
             id to text
         }.toMutableMap()
         idPairs += similarDto.category_recommendations.associate {
-            val id = mappings.getMangadexID(it.series_id.toString(), "mu_new")
+            val id = mappings.getMangadexUUID(it.series_id.toString(), "mu_new")
             val text = "Similar"
             id to text
         }
