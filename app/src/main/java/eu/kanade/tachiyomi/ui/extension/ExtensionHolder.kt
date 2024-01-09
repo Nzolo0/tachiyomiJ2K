@@ -115,9 +115,6 @@ class ExtensionHolder(view: View, val adapter: ExtensionAdapter) :
     private fun String.plusRepo(extension: Extension): String {
         val repoText = when {
             extension is Extension.Untrusted -> itemView.context.getString(R.string.untrusted)
-            extension is Extension.Installed && extension.isRepoSource -> itemView.context.getString(R.string.repo_source)
-            extension is Extension.Available && extension.isRepoSource -> itemView.context.getString(R.string.repo_source)
-            extension is Extension.Installed && extension.isUnofficial -> itemView.context.getString(R.string.unofficial)
             extension is Extension.Installed && extension.isObsolete -> itemView.context.getString(R.string.obsolete)
             else -> ""
         }

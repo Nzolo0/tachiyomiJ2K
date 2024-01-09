@@ -29,6 +29,14 @@ class RepoController(bundle: Bundle? = null) :
     SmallToolbarInterface,
     RepoAdapter.RepoItemListener {
 
+    constructor(repoUrl: String) : this(
+        Bundle().apply {
+            putString(REPO_URL, repoUrl)
+        },
+    ) {
+        presenter.createRepo(repoUrl)
+    }
+
     /**
      * Adapter containing repo items.
      */
@@ -48,7 +56,7 @@ class RepoController(bundle: Bundle? = null) :
      * Returns the toolbar title to show when this controller is attached.
      */
     override fun getTitle(): String? {
-        return resources?.getString(R.string.action_edit_repos)
+        return resources?.getString(R.string.extension_repos)
     }
 
     override fun createBinding(inflater: LayoutInflater) = CategoriesControllerBinding.inflate(inflater)
@@ -95,10 +103,9 @@ class RepoController(bundle: Bundle? = null) :
     /**
      * Called from the presenter when the repos are updated.
      *
-     * @param repos The new list of repos to display.
      */
-    fun setRepos(repos: List<RepoItem>) {
-        adapter?.updateDataSet(repos)
+    fun updateRepos() {
+        adapter?.updateDataSet(presenter.getReposWithCreate())
         adapter?.addItem(0, InfoRepoMessage())
     }
 
@@ -120,7 +127,7 @@ class RepoController(bundle: Bundle? = null) :
         if (repo.isBlank()) {
             activity?.toast(R.string.url_not_set_click_again)
         } else {
-            activity?.openInBrowser("https://github.com/$repo".toUri())
+            activity?.openInBrowser(repo.toUri())
         }
     }
 
@@ -147,6 +154,7 @@ class RepoController(bundle: Bundle? = null) :
     override fun onItemDelete(position: Int) {
         activity!!.materialAlertDialog()
             .setTitle(R.string.confirm_repo_deletion)
+            .setMessage(R.string.delete_repo_confirmation)
             .setPositiveButton(R.string.delete) { _, _ ->
                 deleteRepo(position)
             }
@@ -183,16 +191,13 @@ class RepoController(bundle: Bundle? = null) :
     }
 
     /**
-     * Called from the presenter when a repo already exists.
-     */
-    fun onRepoExistsError() {
-        activity?.toast(R.string.error_repo_exists)
-    }
-
-    /**
      * Called from the presenter when a invalid repo is made
      */
     fun onRepoInvalidNameError() {
         activity?.toast(R.string.invalid_repo_name)
+    }
+
+    companion object {
+        const val REPO_URL = "repo_url"
     }
 }

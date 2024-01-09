@@ -55,7 +55,7 @@ class SettingsBrowseController : SettingsController() {
                 key = "pref_edit_extension_repos"
 
                 val repoCount = preferences.extensionRepos().get().count()
-                titleRes = if (repoCount > 0) R.string.action_edit_repos else R.string.action_add_repo
+                titleRes = R.string.extension_repos
                 if (repoCount > 0) summary = context.resources.getQuantityString(R.plurals.num_repos, repoCount, repoCount)
 
                 onClick { router.pushController(RepoController().withFadeTransaction()) }

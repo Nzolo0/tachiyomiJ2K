@@ -52,13 +52,10 @@ internal object ExtensionLoader {
         PackageManager.GET_SIGNATURES or
         (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) PackageManager.GET_SIGNING_CERTIFICATES else 0)
 
-    // inorichi's key
-    private const val officialSignature = "7ce04da7773d41b489f4693a366c36bcd0a11fc39b547168553c285bd7348e23"
-
     /**
      * List of the trusted signatures.
      */
-    var trustedSignatures = mutableSetOf(officialSignature) + preferences.trustedSignatures().get()
+    var trustedSignatures = preferences.trustedSignatures().get()
 
     private const val PRIVATE_EXTENSION_EXTENSION = "ext"
 
@@ -371,11 +368,8 @@ internal object ExtensionLoader {
             libVersion = libVersion,
             lang = lang,
             isNsfw = isNsfw,
-            hasReadme = hasReadme,
-            hasChangelog = hasChangelog,
             sources = sources,
             pkgFactory = appInfo.metaData.getString(METADATA_SOURCE_FACTORY),
-            isUnofficial = !isOfficiallySigned(signatures),
             icon = appInfo.loadIcon(pkgManager),
             isShared = extensionInfo.isShared,
         )
@@ -439,10 +433,6 @@ internal object ExtensionLoader {
 
     private fun hasTrustedSignature(signatures: List<String>): Boolean {
         return trustedSignatures.any { signatures.contains(it) }
-    }
-
-    private fun isOfficiallySigned(signatures: List<String>): Boolean {
-        return signatures.all { it == officialSignature }
     }
 
     /**

@@ -1,6 +1,8 @@
 package eu.kanade.tachiyomi.ui.source.browse.repos
 
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
+import eu.kanade.tachiyomi.data.preference.minusAssign
+import eu.kanade.tachiyomi.data.preference.plusAssign
 import eu.kanade.tachiyomi.ui.base.presenter.BaseCoroutinePresenter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,22 +25,21 @@ class RepoPresenter(
     /**
      * List containing repos.
      */
-    private var repos: MutableList<String> = mutableListOf()
+    private val repos: Set<String>
+        get() = preferences.extensionRepos().get()
 
     /**
      * Called when the presenter is created.
      */
     fun getRepos() {
         scope.launch(Dispatchers.IO) {
-            repos.clear()
-            repos.addAll(preferences.extensionRepos().get())
             withContext(Dispatchers.Main) {
-                controller.setRepos(getReposWithCreate())
+                controller.updateRepos()
             }
         }
     }
 
-    private fun getReposWithCreate(): List<RepoItem> {
+    fun getReposWithCreate(): List<RepoItem> {
         return (listOf(CREATE_REPO_ITEM) + repos).map(::RepoItem)
     }
 
@@ -50,9 +51,8 @@ class RepoPresenter(
     fun createRepo(name: String): Boolean {
         if (isInvalidRepo(name)) return false
 
-        repos.add(0, name)
-        preferences.extensionRepos().set(repos.toSet())
-        controller.setRepos(getReposWithCreate())
+        preferences.extensionRepos() += name.removeSuffix("/index.min.json")
+        controller.updateRepos()
         return true
     }
 
@@ -63,9 +63,8 @@ class RepoPresenter(
      */
     fun deleteRepo(repo: String?) {
         val safeRepo = repo ?: return
-        repos.remove(safeRepo)
-        preferences.extensionRepos().set(repos.toSet())
-        controller.setRepos(getReposWithCreate())
+        preferences.extensionRepos() -= safeRepo
+        controller.updateRepos()
     }
 
     /**
@@ -75,22 +74,17 @@ class RepoPresenter(
      * @param name The new name of the repo.
      */
     fun renameRepo(repo: String, name: String): Boolean {
-        if (!repo.equals(name, true)) {
+        val truncName = name.removeSuffix("/index.min.json")
+        if (!repo.equals(truncName, true)) {
             if (isInvalidRepo(name)) return false
-            repos[repos.indexOf(repo)] = name
-            preferences.extensionRepos().set(repos.toSet())
-            controller.setRepos(getReposWithCreate())
+            preferences.extensionRepos() -= repo
+            preferences.extensionRepos() += truncName
+            controller.updateRepos()
         }
         return true
     }
 
     private fun isInvalidRepo(name: String): Boolean {
-        // Do not allow duplicate repos.
-        if (repoExists(name)) {
-            controller.onRepoExistsError()
-            return true
-        }
-
         // Do not allow invalid formats
         if (!name.matches(repoRegex)) {
             controller.onRepoInvalidNameError()
@@ -99,15 +93,8 @@ class RepoPresenter(
         return false
     }
 
-    /**
-     * Returns true if a repo with the given name already exists.
-     */
-    private fun repoExists(name: String): Boolean {
-        return repos.any { it.equals(name, true) }
-    }
-
     companion object {
-        val repoRegex = """^[a-zA-Z0-9-_.]*?\/[a-zA-Z0-9-_.]*?$""".toRegex()
+        private val repoRegex = """^https://.*/index\.min\.json$""".toRegex()
         const val CREATE_REPO_ITEM = "create_repo"
     }
 }

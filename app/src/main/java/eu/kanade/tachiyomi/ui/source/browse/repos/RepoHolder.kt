@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.source.browse.repos
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.text.InputType
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
@@ -31,7 +32,7 @@ class RepoHolder(view: View, val adapter: RepoAdapter) : FlexibleViewHolder(view
         }
     }
 
-    var createRepo = false
+    private var createRepo = false
     private var regularDrawable: Drawable? = null
 
     /**
@@ -57,7 +58,7 @@ class RepoHolder(view: View, val adapter: RepoAdapter) : FlexibleViewHolder(view
             regularDrawable = ContextCompat.getDrawable(itemView.context, R.drawable.ic_add_24dp)
             binding.editButton.setImageDrawable(null)
             binding.editText.setText("")
-            binding.editText.hint = binding.title.text
+            binding.editText.hint = ""
         } else {
             binding.title.text = repo
             binding.title.maxLines = 2
@@ -76,14 +77,14 @@ class RepoHolder(view: View, val adapter: RepoAdapter) : FlexibleViewHolder(view
         binding.title.isInvisible = editing
         binding.editText.isInvisible = !editing
         if (editing) {
+            binding.editText.inputType = InputType.TYPE_TEXT_VARIATION_URI
             binding.editText.requestFocus()
             binding.editText.selectAll()
             binding.editButton.setImageDrawable(ContextCompat.getDrawable(itemView.context, R.drawable.ic_check_24dp))
             binding.editButton.drawable.mutate().setTint(itemView.context.getResourceColor(R.attr.colorSecondary))
             showKeyboard()
-            if (createRepo) {
-                binding.editText.hint = "username/repo"
-            } else {
+            if (!createRepo) {
+                binding.editText.setText("${binding.editText.text}/index.min.json")
                 binding.reorder.setImageDrawable(
                     ContextCompat.getDrawable(itemView.context, R.drawable.ic_delete_24dp),
                 )

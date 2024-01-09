@@ -6,7 +6,7 @@ import android.os.Build
 import android.os.Parcelable
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
-import eu.kanade.tachiyomi.extension.api.ExtensionGithubApi
+import eu.kanade.tachiyomi.extension.api.ExtensionApi
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.model.LoadResult
@@ -46,7 +46,7 @@ class ExtensionManager(
     /**
      * API where all the available extensions can be found.
      */
-    private val api = ExtensionGithubApi()
+    private val api = ExtensionApi()
 
     /**
      * The installer which installs, updates and uninstalls the extensions.
@@ -200,16 +200,15 @@ class ExtensionManager(
             val pkgName = installedExt.pkgName
             val availableExt = availableExtensions.find { it.pkgName == pkgName }
 
-            if (!installedExt.isUnofficial && availableExt == null != installedExt.isObsolete) {
+            if (availableExt == null != installedExt.isObsolete) {
                 mutInstalledExtensions[index] = installedExt.copy(isObsolete = true)
                 changed = true
             }
             if (availableExt != null) {
                 val hasUpdate = installedExt.updateExists(availableExt)
-                if (installedExt.hasUpdate != hasUpdate || availableExt.isRepoSource) {
+                if (installedExt.hasUpdate != hasUpdate) {
                     mutInstalledExtensions[index] = installedExt.copy(
                         hasUpdate = hasUpdate,
-                        isRepoSource = availableExt.isRepoSource,
                         repoUrl = availableExt.repoUrl,
                     )
                     hasUpdateCount++
@@ -428,7 +427,7 @@ class ExtensionManager(
 
     private fun Extension.Installed.updateExists(availableExtension: Extension.Available? = null): Boolean {
         val availableExt = availableExtension ?: availableExtensionsFlow.value.find { it.pkgName == pkgName }
-        if ((isUnofficial && availableExt?.isRepoSource != true) || availableExt == null) return false
+            ?: return false
 
         return (availableExt.versionCode > versionCode || availableExt.libVersion > libVersion)
     }

@@ -8,7 +8,7 @@ import eu.kanade.tachiyomi.extension.model.LoadResult
 import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.network.await
+import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.parseAs
 import eu.kanade.tachiyomi.util.system.withIOContext
 import kotlinx.serialization.Serializable
@@ -18,58 +18,40 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 
-internal class ExtensionGithubApi {
+internal class ExtensionApi {
 
     private val json: Json by injectLazy()
     private val networkService: NetworkHelper by injectLazy()
     private val preferences: PreferencesHelper by injectLazy()
 
-    private var requiresFallbackSource = false
-
     suspend fun findExtensions(): List<Extension.Available> {
         return withIOContext {
-            val githubResponse = if (requiresFallbackSource) {
-                null
-            } else {
-                try {
-                    networkService.client
-                        .newCall(GET("${REPO_URL_PREFIX}index.min.json"))
-                        .await()
-                } catch (e: Throwable) {
-                    Timber.e(e, "Failed to get extensions from GitHub")
-                    requiresFallbackSource = true
-                    null
-                }
-            }
-
-            val response = githubResponse ?: run {
-                networkService.client
-                    .newCall(GET("${FALLBACK_REPO_URL_PREFIX}index.min.json"))
-                    .await()
-            }
-
-            val extensions = with(json) {
-                response
-                    .parseAs<List<ExtensionJsonObject>>()
-                    .toExtensions() + preferences.extensionRepos()
-                    .get()
-                    .flatMap { repoPath ->
-                        val url = "$BASE_URL$repoPath/repo/"
-                        networkService.client
-                            .newCall(GET("${url}index.min.json"))
-                            .await()
-                            .parseAs<List<ExtensionJsonObject>>()
-                            .toExtensions(url, repoSource = true)
-                    }
-            }
+            val extensions = preferences.extensionRepos().get().flatMap { getExtensions(it) }
 
             // Sanity check - a small number of extensions probably means something broke
             // with the repo generator
-            if (extensions.size < 100) {
+            if (extensions.isEmpty()) {
                 throw Exception()
             }
 
             extensions
+        }
+    }
+
+    private suspend fun getExtensions(repoBaseUrl: String): List<Extension.Available> {
+        return try {
+            val response = networkService.client
+                .newCall(GET("$repoBaseUrl/index.min.json"))
+                .awaitSuccess()
+
+            with(json) {
+                response
+                    .parseAs<List<ExtensionJsonObject>>()
+                    .toExtensions(repoBaseUrl)
+            }
+        } catch (e: Throwable) {
+            Timber.e(e, "Failed to get extensions from $repoBaseUrl")
+            emptyList()
         }
     }
 
@@ -90,7 +72,7 @@ internal class ExtensionGithubApi {
                 val availableExt = extensions.find { it.pkgName == pkgName } ?: continue
                 val hasUpdatedVer = availableExt.versionCode > installedExt.versionCode
                 val hasUpdatedLib = availableExt.libVersion > installedExt.libVersion
-                val hasUpdate = installedExt.isUnofficial.not() && (hasUpdatedVer || hasUpdatedLib)
+                val hasUpdate = hasUpdatedVer || hasUpdatedLib
                 if (hasUpdate) {
                     extensionsWithUpdate.add(availableExt)
                 }
@@ -100,7 +82,7 @@ internal class ExtensionGithubApi {
         }
     }
 
-    private fun List<ExtensionJsonObject>.toExtensions(repoUrl: String = getUrlPrefix(), repoSource: Boolean = false): List<Extension.Available> {
+    private fun List<ExtensionJsonObject>.toExtensions(repoUrl: String): List<Extension.Available> {
         return this
             .filter {
                 val libVersion = it.extractLibVersion()
@@ -115,13 +97,10 @@ internal class ExtensionGithubApi {
                     libVersion = it.extractLibVersion(),
                     lang = it.lang,
                     isNsfw = it.nsfw == 1,
-                    hasReadme = it.hasReadme == 1,
-                    hasChangelog = it.hasChangelog == 1,
                     sources = it.sources ?: emptyList(),
                     apkName = it.apk,
                     iconUrl = "${repoUrl}icon/${it.pkg}.png",
                     repoUrl = repoUrl,
-                    isRepoSource = repoSource,
                 )
             }
     }
@@ -130,23 +109,10 @@ internal class ExtensionGithubApi {
         return "${extension.repoUrl}apk/${extension.apkName}"
     }
 
-    private fun getUrlPrefix(): String {
-        return if (requiresFallbackSource) {
-            FALLBACK_REPO_URL_PREFIX
-        } else {
-            REPO_URL_PREFIX
-        }
-    }
-
     private fun ExtensionJsonObject.extractLibVersion(): Double {
         return version.substringBeforeLast('.').toDouble()
     }
 }
-
-const val BASE_URL = "https://raw.githubusercontent.com/"
-const val REPO_URL_PREFIX = "${BASE_URL}tachiyomiorg/tachiyomi-extensions/repo/"
-private const val FALLBACK_BASE_URL = "https://gcore.jsdelivr.net/gh/"
-private const val FALLBACK_REPO_URL_PREFIX = "${FALLBACK_BASE_URL}tachiyomiorg/tachiyomi-extensions@repo/"
 
 @Serializable
 private data class ExtensionJsonObject(
@@ -157,7 +123,5 @@ private data class ExtensionJsonObject(
     val code: Long,
     val version: String,
     val nsfw: Int,
-    val hasReadme: Int = 0,
-    val hasChangelog: Int = 0,
     val sources: List<Extension.AvailableSource>?,
 )
