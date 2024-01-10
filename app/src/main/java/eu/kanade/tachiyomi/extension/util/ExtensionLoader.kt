@@ -33,6 +33,7 @@ import java.nio.file.attribute.BasicFileAttributes
 internal object ExtensionLoader {
 
     private val preferences: PreferencesHelper by injectLazy()
+    private val trustExtension: TrustExtension by injectLazy()
     private val loadNsfwSource by lazy {
         preferences.showNsfwSources().get()
     }
@@ -41,8 +42,6 @@ internal object ExtensionLoader {
     private const val METADATA_SOURCE_CLASS = "tachiyomi.extension.class"
     private const val METADATA_SOURCE_FACTORY = "tachiyomi.extension.factory"
     private const val METADATA_NSFW = "tachiyomi.extension.nsfw"
-    private const val METADATA_HAS_README = "tachiyomi.extension.hasReadme"
-    private const val METADATA_HAS_CHANGELOG = "tachiyomi.extension.hasChangelog"
     const val LIB_VERSION_MIN = 1.3
     const val LIB_VERSION_MAX = 1.5
 
@@ -51,11 +50,6 @@ internal object ExtensionLoader {
         PackageManager.GET_META_DATA or
         PackageManager.GET_SIGNATURES or
         (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) PackageManager.GET_SIGNING_CERTIFICATES else 0)
-
-    /**
-     * List of the trusted signatures.
-     */
-    var trustedSignatures = preferences.trustedSignatures().get()
 
     private const val PRIVATE_EXTENSION_EXTENSION = "ext"
 
@@ -304,7 +298,7 @@ internal object ExtensionLoader {
         if (signatures.isNullOrEmpty()) {
             Timber.w("Package $pkgName isn't signed")
             return LoadResult.Error
-        } else if (!hasTrustedSignature(signatures)) {
+        } else if (!isTrusted(pkgInfo, signatures)) {
             val extension = Extension.Untrusted(
                 extName,
                 pkgName,
@@ -322,9 +316,6 @@ internal object ExtensionLoader {
             Timber.w("NSFW extension $pkgName not allowed")
             return LoadResult.Error
         }
-
-        val hasReadme = appInfo.metaData.getInt(METADATA_HAS_README, 0) == 1
-        val hasChangelog = appInfo.metaData.getInt(METADATA_HAS_CHANGELOG, 0) == 1
 
         val classLoader = PathClassLoader(appInfo.sourceDir, null, context.classLoader)
 
@@ -431,8 +422,8 @@ internal object ExtensionLoader {
             ?.toList()
     }
 
-    private fun hasTrustedSignature(signatures: List<String>): Boolean {
-        return trustedSignatures.any { signatures.contains(it) }
+    private fun isTrusted(pkgInfo: PackageInfo, signatures: List<String>): Boolean {
+         return trustExtension.isTrusted(pkgInfo, signatures.last())
     }
 
     /**

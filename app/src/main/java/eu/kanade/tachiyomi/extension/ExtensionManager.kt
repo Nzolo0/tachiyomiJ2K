@@ -13,6 +13,7 @@ import eu.kanade.tachiyomi.extension.model.LoadResult
 import eu.kanade.tachiyomi.extension.util.ExtensionInstallReceiver
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.extension.util.ExtensionLoader
+import eu.kanade.tachiyomi.extension.util.TrustExtension
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.ui.extension.ExtensionIntallInfo
 import eu.kanade.tachiyomi.util.system.launchNow
@@ -41,6 +42,7 @@ import java.util.Locale
 class ExtensionManager(
     private val context: Context,
     private val preferences: PreferencesHelper = Injekt.get(),
+    private val trustExtension: TrustExtension = Injekt.get(),
 ) {
 
     /**
@@ -308,34 +310,30 @@ class ExtensionManager(
     }
 
     /**
-     * Adds the given signature to the list of trusted signatures. It also loads in background the
-     * extensions that match this signature.
+     * Adds the given extension to the list of trusted extensions. It also loads in background the
+     * now trusted extensions.
      *
-     * @param signature The signature to whitelist.
+     * @param pkgName the package name of the extension to trust
+     * @param versionCode the version code of the extension to trust
+     * @param signatureHash the signature hash of the extension to trust
      */
-    fun trustSignature(signature: String) {
-        val untrustedSignatures = untrustedExtensionsFlow.value.map { it.signatureHash }.toSet()
-        if (signature !in untrustedSignatures) return
+    fun trust(pkgName: String, versionCode: Long, signatureHash: String) {
+        val untrustedPkgNames = untrustedExtensionsFlow.value.map { it.pkgName }.toSet()
+        if (pkgName !in untrustedPkgNames) return
 
-        ExtensionLoader.trustedSignatures += signature
-        val preference = preferences.trustedSignatures()
-        preference.set(preference.get() + signature)
+        trustExtension.trust(pkgName, versionCode, signatureHash)
 
-        val nowTrustedExtensions = untrustedExtensionsFlow.value.filter { it.signatureHash == signature }
+        val nowTrustedExtensions = untrustedExtensionsFlow.value
+            .filter { it.pkgName == pkgName && it.versionCode == versionCode }
         _untrustedExtensionsFlow.value -= nowTrustedExtensions
 
-        val ctx = context
         launchNow {
             nowTrustedExtensions
                 .map { extension ->
-                    async { ExtensionLoader.loadExtensionFromPkgName(ctx, extension.pkgName) }
+                    async { ExtensionLoader.loadExtensionFromPkgName(context, extension.pkgName) }.await()
                 }
-                .map { it.await() }
-                .forEach { result ->
-                    if (result is LoadResult.Success) {
-                        registerNewExtension(result.extension)
-                    }
-                }
+                .filterIsInstance<LoadResult.Success>()
+                .forEach { registerNewExtension(it.extension) }
         }
     }
 

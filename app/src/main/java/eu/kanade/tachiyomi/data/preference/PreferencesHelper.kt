@@ -345,7 +345,7 @@ class PreferencesHelper(val context: Context) {
 
     fun migrateFlags() = flowPrefs.getInt("migrate_flags", Int.MAX_VALUE)
 
-    fun trustedSignatures() = flowPrefs.getStringSet("trusted_signatures", emptySet())
+    fun trustedExtensions() = flowPrefs.getStringSet("trusted_extensions", emptySet())
 
     // using string instead of set so it is ordered
     fun migrationSources() = flowPrefs.getString("migrate_sources", "")
