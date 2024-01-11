@@ -99,14 +99,14 @@ internal class ExtensionApi {
                     isNsfw = it.nsfw == 1,
                     sources = it.sources ?: emptyList(),
                     apkName = it.apk,
-                    iconUrl = "${repoUrl}icon/${it.pkg}.png",
+                    iconUrl = "$repoUrl/icon/${it.pkg}.png",
                     repoUrl = repoUrl,
                 )
             }
     }
 
     fun getApkUrl(extension: ExtensionManager.ExtensionInfo): String {
-        return "${extension.repoUrl}apk/${extension.apkName}"
+        return "${extension.repoUrl}/apk/${extension.apkName}"
     }
 
     private fun ExtensionJsonObject.extractLibVersion(): Double {

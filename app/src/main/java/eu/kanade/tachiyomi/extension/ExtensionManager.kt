@@ -18,6 +18,7 @@ import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.ui.extension.ExtensionIntallInfo
 import eu.kanade.tachiyomi.util.system.launchNow
 import eu.kanade.tachiyomi.util.system.toast
+import eu.kanade.tachiyomi.util.system.withUIContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -135,7 +136,7 @@ class ExtensionManager(
             api.findExtensions()
         } catch (e: Exception) {
             Timber.e(e, context.getString(R.string.extension_api_error))
-            context.toast(R.string.extension_api_error)
+            withUIContext { context.toast(R.string.extension_api_error) }
             emptyList()
         }
         enableAdditionalSubLanguages(extensions)
