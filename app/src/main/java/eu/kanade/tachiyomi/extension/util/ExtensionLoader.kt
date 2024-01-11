@@ -423,7 +423,7 @@ internal object ExtensionLoader {
     }
 
     private fun isTrusted(pkgInfo: PackageInfo, signatures: List<String>): Boolean {
-         return trustExtension.isTrusted(pkgInfo, signatures.last())
+        return trustExtension.isTrusted(pkgInfo, signatures.last())
     }
 
     /**

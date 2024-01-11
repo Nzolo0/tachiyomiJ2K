@@ -361,6 +361,7 @@
         <item quantity="one">Extension update available</item>
         <item quantity="other">%d extension updates available</item>
     </plurals>
+    <string name="ext_revoke_trust">Revoke trusted unknown extensions</string>
 
     <!-- Extension Repos -->
     <string name="action_add_repo">Add repo</string>
