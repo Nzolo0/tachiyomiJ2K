@@ -135,7 +135,7 @@ class ExtensionManager(
             Timber.e(e, context.getString(R.string.extension_api_error))
             context.toast(R.string.extension_api_error)
             emptyList()
-            }
+        }
         enableAdditionalSubLanguages(extensions)
 
         _availableExtensionsFlow.value = extensions

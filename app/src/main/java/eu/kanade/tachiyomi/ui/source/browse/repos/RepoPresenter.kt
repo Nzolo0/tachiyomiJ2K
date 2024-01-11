@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.source.browse.repos
 
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
-import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
+import eu.kanade.tachiyomi.ui.base.presenter.BaseCoroutinePresenter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -16,7 +16,7 @@ import uy.kohesive.injekt.api.get
 class RepoPresenter(
     private val controller: RepoController,
     private val preferences: PreferencesHelper = Injekt.get(),
-) : BasePresenter<RepoController>() {
+) : BaseCoroutinePresenter<RepoController>() {
 
     private var scope = CoroutineScope(Job() + Dispatchers.Default)
 
