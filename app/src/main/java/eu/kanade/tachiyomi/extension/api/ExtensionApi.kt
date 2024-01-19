@@ -40,19 +40,19 @@ internal class ExtensionApi {
         }
     }
 
-    private suspend fun getExtensions(repoBaseUrl: String): List<Extension.Available> {
+    private suspend fun getExtensions(repoUrl: String): List<Extension.Available> {
         return try {
             val response = networkService.client
-                .newCall(GET("$repoBaseUrl/index.min.json"))
+                .newCall(GET(repoUrl))
                 .awaitSuccess()
 
             with(json) {
                 response
                     .parseAs<List<ExtensionJsonObject>>()
-                    .toExtensions(repoBaseUrl)
+                    .toExtensions(repoUrl)
             }
         } catch (e: Throwable) {
-            Timber.e(e, "Failed to get extensions from $repoBaseUrl")
+            Timber.e(e, "Failed to get extensions from $repoUrl")
             emptyList()
         }
     }
@@ -85,6 +85,7 @@ internal class ExtensionApi {
     }
 
     private fun List<ExtensionJsonObject>.toExtensions(repoUrl: String): List<Extension.Available> {
+        val repoBaseUrl = repoUrl.removeSuffix("/index.min.json")
         return this
             .filter {
                 val libVersion = it.extractLibVersion()
@@ -101,8 +102,8 @@ internal class ExtensionApi {
                     isNsfw = it.nsfw == 1,
                     sources = it.sources ?: emptyList(),
                     apkName = it.apk,
-                    iconUrl = "$repoUrl/icon/${it.pkg}.png",
-                    repoUrl = repoUrl,
+                    iconUrl = "$repoBaseUrl/icon/${it.pkg}.png",
+                    repoUrl = repoBaseUrl,
                 )
             }
     }

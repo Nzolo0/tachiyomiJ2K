@@ -84,7 +84,6 @@ class RepoHolder(view: View, val adapter: RepoAdapter) : FlexibleViewHolder(view
             binding.editButton.drawable.mutate().setTint(itemView.context.getResourceColor(R.attr.colorSecondary))
             showKeyboard()
             if (!createRepo) {
-                binding.editText.setText("${binding.editText.text}/index.min.json")
                 binding.reorder.setImageDrawable(
                     ContextCompat.getDrawable(itemView.context, R.drawable.ic_delete_24dp),
                 )

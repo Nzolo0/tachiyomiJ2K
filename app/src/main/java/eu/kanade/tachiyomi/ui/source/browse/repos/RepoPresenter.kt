@@ -59,7 +59,7 @@ class RepoPresenter(
     fun createRepo(name: String): Boolean {
         if (isInvalidRepo(name)) return false
 
-        preferences.extensionRepos() += name.removeSuffix("/index.min.json")
+        preferences.extensionRepos() += name
         controller.updateRepos()
         return true
     }
@@ -82,11 +82,10 @@ class RepoPresenter(
      * @param name The new name of the repo.
      */
     fun renameRepo(repo: String, name: String): Boolean {
-        val truncName = name.removeSuffix("/index.min.json")
-        if (!repo.equals(truncName, true)) {
+        if (!repo.equals(name, true)) {
             if (isInvalidRepo(name)) return false
             preferences.extensionRepos() -= repo
-            preferences.extensionRepos() += truncName
+            preferences.extensionRepos() += name
             controller.updateRepos()
         }
         return true
@@ -94,7 +93,7 @@ class RepoPresenter(
 
     private fun isInvalidRepo(name: String): Boolean {
         // Do not allow duplicate repos.
-        if (repoExists(name.removeSuffix("/index.min.json"))) {
+        if (repoExists(name)) {
             controller.onRepoExistsError()
             return true
         }
