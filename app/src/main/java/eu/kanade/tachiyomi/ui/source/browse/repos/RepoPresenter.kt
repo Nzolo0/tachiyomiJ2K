@@ -1,8 +1,6 @@
 package eu.kanade.tachiyomi.ui.source.browse.repos
 
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
-import eu.kanade.tachiyomi.data.preference.minusAssign
-import eu.kanade.tachiyomi.data.preference.plusAssign
 import eu.kanade.tachiyomi.ui.base.presenter.BaseCoroutinePresenter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,8 +23,9 @@ class RepoPresenter(
     /**
      * List containing repos.
      */
-    private val repos: Set<String>
-        get() = preferences.extensionRepos().get()
+    private var repos: Set<String>
+        get() = preferences.extensionRepos().get().map { "$it/index.min.json" }.sorted().toSet()
+        set(value) = preferences.extensionRepos().set(value.map { it.removeSuffix("/index.min.json") }.toSet())
 
     /**
      * Called when the presenter is created.
@@ -59,7 +58,13 @@ class RepoPresenter(
     fun createRepo(name: String): Boolean {
         if (isInvalidRepo(name)) return false
 
-        preferences.extensionRepos() += name
+        // Do not allow duplicate repos.
+        if (repoExists(name)) {
+            controller.onRepoExistsError()
+            return true
+        }
+
+        repos += name
         controller.updateRepos()
         return true
     }
@@ -71,7 +76,7 @@ class RepoPresenter(
      */
     fun deleteRepo(repo: String?) {
         val safeRepo = repo ?: return
-        preferences.extensionRepos() -= safeRepo
+        repos -= safeRepo
         controller.updateRepos()
     }
 
@@ -84,19 +89,14 @@ class RepoPresenter(
     fun renameRepo(repo: String, name: String): Boolean {
         if (!repo.equals(name, true)) {
             if (isInvalidRepo(name)) return false
-            preferences.extensionRepos() -= repo
-            preferences.extensionRepos() += name
+            repos -= repo
+            repos += name
             controller.updateRepos()
         }
         return true
     }
 
     private fun isInvalidRepo(name: String): Boolean {
-        // Do not allow duplicate repos.
-        if (repoExists(name)) {
-            controller.onRepoExistsError()
-            return true
-        }
         // Do not allow invalid formats
         if (!name.matches(repoRegex)) {
             controller.onRepoInvalidNameError()
