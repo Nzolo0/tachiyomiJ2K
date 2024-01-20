@@ -43,6 +43,14 @@ class RepoPresenter(
         return (listOf(CREATE_REPO_ITEM) + repos).map(::RepoItem)
     }
 
+    fun getRepoUrl(repo: String): String {
+        return githubRepoRegex.find(repo)
+            ?.let {
+                val (user, repoName) = it.destructured
+                "https://github.com/$user/$repoName"
+            } ?: repo
+    }
+
     /**
      * Creates and adds a new repo to the database.
      *
@@ -107,6 +115,7 @@ class RepoPresenter(
 
     companion object {
         private val repoRegex = """^https://.*/index\.min\.json$""".toRegex()
+        private val githubRepoRegex = """https://raw.githubusercontent.com/(.+?)/(.+?)/.+""".toRegex()
         const val CREATE_REPO_ITEM = "create_repo"
     }
 }

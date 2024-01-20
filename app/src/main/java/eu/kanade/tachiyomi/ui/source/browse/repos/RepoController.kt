@@ -122,12 +122,13 @@ class RepoController(bundle: Bundle? = null) :
 
     override fun onLogoClick(position: Int) {
         val repo = (adapter?.getItem(position) as? RepoItem)?.repo ?: return
+        val repoUrl = presenter.getRepoUrl(repo)
         if (isNotOnline()) return
 
-        if (repo.isBlank()) {
+        if (repoUrl.isBlank()) {
             activity?.toast(R.string.url_not_set_click_again)
         } else {
-            activity?.openInBrowser(repo.toUri())
+            activity?.openInBrowser(repoUrl.toUri())
         }
     }
 
