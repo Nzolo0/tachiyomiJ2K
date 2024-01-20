@@ -196,6 +196,13 @@ class RepoController(bundle: Bundle? = null) :
     }
 
     /**
+     * Called from the presenter when a repo already exists.
+     */
+    fun onRepoExistsError() {
+        activity?.toast(R.string.error_repo_exists)
+    }
+
+    /**
      * Called from the presenter when a invalid repo is made
      */
     fun onRepoInvalidNameError() {

@@ -85,12 +85,24 @@ class RepoPresenter(
     }
 
     private fun isInvalidRepo(name: String): Boolean {
+        // Do not allow duplicate repos.
+        if (repoExists(name.removeSuffix("/index.min.json"))) {
+            controller.onRepoExistsError()
+            return true
+        }
         // Do not allow invalid formats
         if (!name.matches(repoRegex)) {
             controller.onRepoInvalidNameError()
             return true
         }
         return false
+    }
+
+    /**
+     * Returns true if a repo with the given name already exists.
+     */
+    private fun repoExists(name: String): Boolean {
+        return repos.any { it.equals(name, true) }
     }
 
     companion object {
