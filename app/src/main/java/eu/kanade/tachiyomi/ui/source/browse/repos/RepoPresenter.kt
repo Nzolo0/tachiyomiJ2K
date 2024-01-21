@@ -114,7 +114,7 @@ class RepoPresenter(
 
     companion object {
         private val repoRegex = """^https://.*/index\.min\.json$""".toRegex()
-        private val githubRepoRegex = """https://raw.githubusercontent.com/(.+?)/(.+?)/.+""".toRegex()
+        private val githubRepoRegex = """https://(?:raw.githubusercontent.com|github.com)/(.+?)/(.+?)/.+""".toRegex()
         const val CREATE_REPO_ITEM = "create_repo"
     }
 }
