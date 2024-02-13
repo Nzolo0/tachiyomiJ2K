@@ -404,32 +404,31 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             var hasDownloads = false
             ensureActive()
             notifier.showProgressNotification(manga, progress, mangaToUpdate.size)
-            val fetchedChapters = source.getChapterList(manga)
 
-            if (fetchedChapters.isNotEmpty()) {
-                val newChapters = syncChaptersWithSource(db, fetchedChapters, manga, source)
-                if (newChapters.first.isNotEmpty()) {
-                    if (shouldDownload && manga.initialized) {
-                        prepareDownloadChapters(manga, newChapters.first.sortedBy { it.chapter_number })
-                        hasDownloads = true
-                    }
-                    newUpdates[manga] =
-                        newChapters.first.sortedBy { it.chapter_number }.toTypedArray()
+            val fetchedChapters = source.getChapterList(manga)
+            val newChapters = syncChaptersWithSource(db, fetchedChapters, manga, source)
+
+            if (newChapters.first.isNotEmpty()) {
+                if (shouldDownload && manga.initialized) {
+                    prepareDownloadChapters(manga, newChapters.first.sortedBy { it.chapter_number })
+                    hasDownloads = true
                 }
-                if (deleteRemoved && newChapters.second.isNotEmpty()) {
-                    val removedChapters = newChapters.second.filter {
-                        downloadManager.isChapterDownloaded(it, manga) &&
-                            newChapters.first.none { newChapter ->
-                                newChapter.chapter_number == it.chapter_number && it.scanlator.isNullOrBlank()
-                            }
-                    }
-                    if (removedChapters.isNotEmpty()) {
-                        downloadManager.deleteChapters(removedChapters, manga, source)
-                    }
+                newUpdates[manga] =
+                    newChapters.first.sortedBy { it.chapter_number }.toTypedArray()
+            }
+            if (deleteRemoved && newChapters.second.isNotEmpty()) {
+                val removedChapters = newChapters.second.filter {
+                    downloadManager.isChapterDownloaded(it, manga) &&
+                        newChapters.first.none { newChapter ->
+                            newChapter.chapter_number == it.chapter_number && it.scanlator.isNullOrBlank()
+                        }
                 }
-                if (newChapters.first.size + newChapters.second.size > 0) {
-                    sendUpdate(manga.id)
+                if (removedChapters.isNotEmpty()) {
+                    downloadManager.deleteChapters(removedChapters, manga, source)
                 }
+            }
+            if (newChapters.first.size + newChapters.second.size > 0) {
+                sendUpdate(manga.id)
             }
             return@coroutineScope hasDownloads
         } catch (e: Exception) {
