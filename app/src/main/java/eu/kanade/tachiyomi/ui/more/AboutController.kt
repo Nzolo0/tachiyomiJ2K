@@ -93,7 +93,7 @@ class AboutController : SettingsController() {
         preference {
             key = "pref_version"
             titleRes = R.string.version
-            summary = "r${BuildConfig.COMMIT_COUNT} (${BuildConfig.COMMIT_SHA})"
+            summary = "r${BuildConfig.COMMIT_COUNT} (${BuildConfig.COMMIT_SHA} / master ${BuildConfig.BASE_COMMIT_SHA})"
 
             onClick {
                 activity?.let {

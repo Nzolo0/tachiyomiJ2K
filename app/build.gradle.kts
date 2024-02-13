@@ -37,6 +37,7 @@ android {
         buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
         buildConfigField("String", "BETA_COUNT", "\"${getBetaCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")
+        buildConfigField("String", "BASE_COMMIT_SHA", "\"${getBaseGitSha()}\"")
         buildConfigField("String", "BUILD_TIME", "\"${getBuildTime()}\"")
         buildConfigField("Boolean", "INCLUDE_UPDATER", "true")
         buildConfigField("boolean", "BETA", "false")

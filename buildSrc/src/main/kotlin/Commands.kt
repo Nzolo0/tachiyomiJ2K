@@ -1,8 +1,8 @@
 import org.gradle.api.Project
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
-import java.util.TimeZone
 import java.util.Date
+import java.util.TimeZone
 
 // Git is needed in your system PATH for these commands to work.
 // If it's not installed, you can return a random value as a workaround
@@ -24,12 +24,12 @@ fun Project.getBetaCount(): String {
 
 
 fun Project.getGitSha(): String {
-    var remote = runCommand("git remote -v")
-    if ("upstream" !in remote) {
-        runCommand("git remote add upstream https://github.com/Jays2Kings/tachiyomiJ2K.git")
-        runCommand("git fetch upstream master")
-    }
-    return runCommand("git rev-parse --short upstream/master")
+    return runCommand("git rev-parse --short HEAD")
+    // return "1"
+}
+
+fun Project.getBaseGitSha(): String {
+    return runCommand("git rev-parse --short master")
     // return "1"
 }
 
